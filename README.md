@@ -1,4 +1,4 @@
-**InterFlow** est une solution SaaS full-stack conçue pour les **ESN (Entreprises de Services du Numérique)** et cabinets de conseil. Elle transforme chaque période d'intercontrat en une opportunité à forte valeur ajoutée en combinant la puissance de l'**Intelligence Artificielle (Gemini API)**, le **Matching Prédictif**, la **Gestion des Compétences**, et la **Gouvernance SI**.
+**InterFlow** est une solution SaaS full-stack conçue pour les **ESN (Entreprises de Services du Numérique)** et cabinets de conseil. Elle transforme chaque période d'intercontrat en une opportunité à forte valeur ajoutée en combinant la puissance de l'**Intelligence Artificielle **, le **Matching Prédictif**, la **Gestion des Compétences**, et la **Gouvernance SI**.
 
 ---
 
