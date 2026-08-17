@@ -1,0 +1,13 @@
+variable "location" {
+  default = "France Central"
+}
+
+variable "vm_name" {
+  default = "interflow-vm"
+}
+
+variable "admin_username" {
+  default = "azureuser"
+}
+
+variable "public_key" {}
