@@ -18,13 +18,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Azure Login
+      - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          auth-type: 'OIDC'
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -34,10 +34,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
           ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
-
-          echo "SSH fingerprint:"
           ssh-keygen -lf ~/.ssh/id_rsa.pub
 
       - name: Terraform Init
@@ -61,21 +58,18 @@ jobs:
           [web]
           ${PUBLIC_IP} ansible_user=azureuser
           EOF
-
           cat ansible/inventory.ini
 
       - name: Wait for SSH
         run: |
           for i in {1..30}; do
             echo "Tentative SSH $i..."
-
             ssh \
               -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               -o ConnectTimeout=5 \
               -i ~/.ssh/id_rsa \
               azureuser@${PUBLIC_IP} exit && break
-
             sleep 10
           done
 
