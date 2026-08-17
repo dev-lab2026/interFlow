@@ -8,7 +8,7 @@
 
     - name: Clone repository
       git:
-        repo: "https://github.com/TON_ORG/interflow.git"
+        repo: "https://github.com/dev-lab2026/interFlow.git"
         dest: /opt/interflow
         version: main
         force: yes
