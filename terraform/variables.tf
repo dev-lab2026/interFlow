@@ -1,5 +1,5 @@
 variable "location" {
-  default = "westeurope"
+  default = "francecentral"
 }
 
 variable "vm_name" {
