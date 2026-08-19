@@ -33,5 +33,6 @@
     - name: Deploy application
       ansible.builtin.shell: |
         cd /opt/interflow
-        docker-compose pull || true
-        docker-compose up -d --build
+        docker compose pull || true
+        docker compose up -d --build
+
