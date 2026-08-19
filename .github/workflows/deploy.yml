@@ -55,7 +55,6 @@ jobs:
           [web]
           ${PUBLIC_IP} ansible_user=azureuser
           EOF
-          cat ansible/inventory.ini
 
       - name: Wait for SSH
         run: |
@@ -70,12 +69,26 @@ jobs:
             sleep 10
           done
 
+      - name: Add Host Key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${PUBLIC_IP} >> ~/.ssh/known_hosts
+
       - name: Install Ansible
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible
 
+      - name: Create Ansible Config
+        run: |
+          cat > ansible.cfg <<EOF
+          [defaults]
+          host_key_checking = False
+          EOF
+
       - name: Deploy Application
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           ansible-playbook \
             -i ansible/inventory.ini \
