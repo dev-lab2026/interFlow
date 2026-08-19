@@ -2,19 +2,36 @@
   become: yes
 
   roles:
-    - docker
+    - docker   # installe docker + docker-compose
 
   tasks:
 
+    - name: Fix Azure mirror
+      ansible.builtin.shell: |
+        sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list
+
+    - name: Update system
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Ensure /opt/interflow exists
+      ansible.builtin.file:
+        path: /opt/interflow
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Clone repository
-      git:
+      ansible.builtin.git:
         repo: "https://github.com/dev-lab2026/interFlow.git"
         dest: /opt/interflow
         version: main
         force: yes
 
     - name: Deploy application
-      shell: |
+      ansible.builtin.shell: |
         cd /opt/interflow
-        docker compose pull
-        docker compose up -d --build
+        docker-compose pull || true
+        docker-compose up -d --build
