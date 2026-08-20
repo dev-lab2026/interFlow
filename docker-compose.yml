@@ -24,12 +24,6 @@ services:
     networks:
       - shared_network
 
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
 
   interflow:
     build:
@@ -73,12 +67,6 @@ services:
     networks:
       - shared_network
 
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
 
 volumes:
   postgres_data:
@@ -87,4 +75,3 @@ volumes:
 networks:
   shared_network:
     name: shared_network
-    driver: bridge

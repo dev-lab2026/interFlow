@@ -7,7 +7,6 @@
     - docker
 
   vars:
-    app_name: interflow
     app_dir: /opt/interflow
     repository: "https://github.com/dev-lab2026/interFlow.git"
     branch: main
@@ -29,7 +28,7 @@
         update_cache: true
         cache_valid_time: 3600
 
-    - name: Upgrade system packages
+    - name: Upgrade system
       ansible.builtin.apt:
         upgrade: dist
 
@@ -37,13 +36,13 @@
     # DOCKER
     # ==========================================================
 
-    - name: Ensure Docker service is enabled and running
+    - name: Ensure Docker is running
       ansible.builtin.systemd:
         name: docker
         enabled: true
         state: started
 
-    - name: Check Docker version
+    - name: Check Docker
       ansible.builtin.command:
         cmd: docker --version
       register: docker_version
@@ -63,22 +62,6 @@
       ansible.builtin.debug:
         msg: "{{ compose_version.stdout }}"
 
-    - name: Check Docker Buildx
-      ansible.builtin.command:
-        cmd: docker buildx version
-      register: buildx_version
-      changed_when: false
-      failed_when: false
-
-    - name: Display Buildx status
-      ansible.builtin.debug:
-        msg: >-
-          {{
-            buildx_version.stdout
-            if buildx_version.rc == 0
-            else "Buildx unavailable - using Docker legacy builder"
-          }}
-
     # ==========================================================
     # APPLICATION DIRECTORY
     # ==========================================================
@@ -92,10 +75,10 @@
         mode: "0755"
 
     # ==========================================================
-    # SOURCE CODE
+    # GITHUB
     # ==========================================================
 
-    - name: Clone InterFlow repository
+    - name: Clone InterFlow
       ansible.builtin.git:
         repo: "{{ repository }}"
         dest: "{{ app_dir }}"
@@ -104,10 +87,10 @@
         update: true
 
     # ==========================================================
-    # VALIDATE APPLICATION FILES
+    # VALIDATE FILES
     # ==========================================================
 
-    - name: Check Docker Compose file
+    - name: Check docker-compose.yml
       ansible.builtin.stat:
         path: "{{ app_dir }}/docker-compose.yml"
       register: compose_file
@@ -122,57 +105,53 @@
         path: "{{ app_dir }}/package.json"
       register: package_json
 
-    - name: Check package-lock.json
+    - name: Check bun.lock
       ansible.builtin.stat:
-        path: "{{ app_dir }}/package-lock.json"
-      register: package_lock
+        path: "{{ app_dir }}/bun.lock"
+      register: bun_lock
 
-    - name: Validate required files
+    - name: Validate application files
       ansible.builtin.assert:
         that:
           - compose_file.stat.exists
           - dockerfile.stat.exists
           - package_json.stat.exists
-          - package_lock.stat.exists
+          - bun_lock.stat.exists
         fail_msg: >
-          Required application files are missing.
+          Missing required InterFlow files.
           Expected docker-compose.yml, Dockerfile,
-          package.json and package-lock.json.
+          package.json and bun.lock.
 
     # ==========================================================
-    # DOCKER COMPOSE VALIDATION
+    # COMPOSE CONFIG
     # ==========================================================
 
-    - name: Validate Docker Compose configuration
+    - name: Validate Docker Compose
       ansible.builtin.command:
         cmd: docker compose config
         chdir: "{{ app_dir }}"
-      register: compose_config
       changed_when: false
 
     # ==========================================================
-    # DATABASE IMAGE
+    # PULL POSTGRES
     # ==========================================================
 
-    - name: Pull PostgreSQL image
+    - name: Pull PostgreSQL
       ansible.builtin.command:
         cmd: docker compose pull postgres
         chdir: "{{ app_dir }}"
-      changed_when: false
 
     # ==========================================================
-    # BUILD APPLICATION
+    # BUILD
     # ==========================================================
 
-    - name: Build InterFlow image
+    - name: Build InterFlow
       ansible.builtin.command:
         cmd: docker compose build --no-cache interflow
         chdir: "{{ app_dir }}"
-      environment:
-        DOCKER_BUILDKIT: "0"
 
     # ==========================================================
-    # DEPLOY APPLICATION
+    # DEPLOY
     # ==========================================================
 
     - name: Start InterFlow
@@ -181,7 +160,7 @@
         chdir: "{{ app_dir }}"
 
     # ==========================================================
-    # CONTAINER STATUS
+    # STATUS
     # ==========================================================
 
     - name: Get container status
@@ -199,26 +178,20 @@
     # HEALTH CHECK
     # ==========================================================
 
-    - name: Wait for InterFlow API
+    - name: Wait for InterFlow
       ansible.builtin.uri:
         url: "http://127.0.0.1/api/health"
         method: GET
         status_code: 200
-      register: health_check
+      register: health
       retries: 30
       delay: 5
-      until: health_check.status == 200
+      until: health.status == 200
 
     # ==========================================================
     # SUCCESS
     # ==========================================================
 
-    - name: Deployment completed successfully
+    - name: Deployment successful
       ansible.builtin.debug:
-        msg:
-          - "=============================================="
-          - "InterFlow deployment successful"
-          - "Server: {{ ansible_host }}"
-          - "Application: http://{{ ansible_host }}"
-          - "Health: http://{{ ansible_host }}/api/health"
-          - "=============================================="
+        msg: "InterFlow successfully deployed on {{ ansible_host }}"

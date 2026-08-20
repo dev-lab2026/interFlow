@@ -2,42 +2,38 @@
 # BUILD
 # ==========================================================
 
-FROM node:20-alpine AS build
+FROM oven/bun:1-alpine AS build
 
 WORKDIR /app
 
 ENV NODE_ENV=development
 
-COPY package.json package-lock.json ./
+COPY package.json bun.lock ./
 
-RUN npm ci --no-audit --no-fund
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-RUN npm run build
+RUN bun run build
 
 
 # ==========================================================
 # RUNTIME
 # ==========================================================
 
-FROM node:20-alpine AS runtime
+FROM oven/bun:1-alpine AS runtime
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=80
 
-COPY package.json package-lock.json ./
+COPY package.json bun.lock ./
 
-RUN npm ci \
-    --omit=dev \
-    --no-audit \
-    --no-fund \
-    && npm cache clean --force
+RUN bun install --frozen-lockfile --production
 
 COPY --from=build /app/dist ./dist
 
 EXPOSE 80
 
-CMD ["node", "dist/server.cjs"]
+CMD ["bun", "dist/server.cjs"]
