@@ -11,53 +11,129 @@ permissions:
   contents: read
 
 jobs:
-
   deploy:
-    name: Deploy to Azure VM
+    name: Deploy InterFlow to Azure
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout
+      # =====================================================
+      # CHECKOUT
+      # =====================================================
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup SSH
+      # =====================================================
+      # SSH
+      # =====================================================
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.AZURE_SSH_KEY }}
+          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+        run: |
+          set -e
+
+          echo "Creating SSH directory..."
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+
+          echo "Installing SSH private key..."
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_rsa"
+
+          chmod 600 "$HOME/.ssh/id_rsa"
+
+          echo "Checking SSH key..."
+
+          ssh-keygen -y -f "$HOME/.ssh/id_rsa" > /dev/null
+
+          echo "Adding Azure host..."
+
+          ssh-keyscan -H "$AZURE_VM_IP" >> "$HOME/.ssh/known_hosts"
+
+          chmod 644 "$HOME/.ssh/known_hosts"
+
+          echo "SSH configuration OK"
+
+      # =====================================================
+      # TEST SSH
+      # =====================================================
+
+      - name: Test SSH connection
+        shell: bash
+        env:
+          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+        run: |
+          set -e
+
+          ssh \
+            -i "$HOME/.ssh/id_rsa" \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=10 \
+            azureuser@"$AZURE_VM_IP" \
+            "echo 'SSH connection successful'"
+
+      # =====================================================
+      # INSTALL ANSIBLE
+      # =====================================================
+
+      - name: Install Ansible
         shell: bash
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AZURE_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-          ssh-keyscan -H "${{ secrets.AZURE_VM_IP }}" >> ~/.ssh/known_hosts
-
-      - name: Setup Ansible
-        run: |
           python3 -m pip install --upgrade pip
-          pip install ansible
+          python3 -m pip install ansible
 
-      - name: Install Ansible collection
-        run: |
-          ansible-galaxy collection install community.general
+          ansible --version
 
-      - name: Create inventory
+      # =====================================================
+      # INVENTORY
+      # =====================================================
+
+      - name: Create Ansible inventory
+        shell: bash
+        env:
+          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
         run: |
+          set -e
+
           mkdir -p ansible
 
           cat > ansible/inventory.ini <<EOF
           [web]
-          ${{ secrets.AZURE_VM_IP }} ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_rsa
+          azure-web ansible_host=${AZURE_VM_IP} ansible_user=azureuser ansible_python_interpreter=/usr/bin/python3
           EOF
 
-      - name: Test SSH
+          cat ansible/inventory.ini
+
+      # =====================================================
+      # ANSIBLE PING
+      # =====================================================
+
+      - name: Test Ansible connection
+        shell: bash
         run: |
-          ssh \
-            -i ~/.ssh/id_rsa \
-            -o StrictHostKeyChecking=no \
-            azureuser@${{ secrets.AZURE_VM_IP }} \
-            "docker --version"
+          set -e
+
+          ansible \
+            -i ansible/inventory.ini \
+            web \
+            -m ping \
+            --private-key="$HOME/.ssh/id_rsa"
+
+      # =====================================================
+      # DEPLOY
+      # =====================================================
 
       - name: Deploy with Ansible
+        shell: bash
         run: |
+          set -e
+
           ansible-playbook \
             -i ansible/inventory.ini \
-            ansible/playbook.yml
+            ansible/playbook.yml \
+            --private-key="$HOME/.ssh/id_rsa"
