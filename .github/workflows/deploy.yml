@@ -1,48 +1,20 @@
-name: InterFlow - Production Deploy
+name: Deploy InterFlow to Azure
 
 on:
-
+  workflow_dispatch:
   push:
     branches:
       - main
 
-  workflow_dispatch:
-
 permissions:
+  id-token: write
   contents: read
 
-concurrency:
-  group: interflow-production
-  cancel-in-progress: false
-
-env:
-
-  TF_IN_AUTOMATION: "true"
-  TF_INPUT: "false"
-
-  APP_DIR: /opt/interflow
-
-  HEALTH_URL: http://127.0.0.1:3001/api/health
-
 jobs:
-
-  terraform:
-
-    name: Provision Azure Infrastructure
-
+  deploy:
     runs-on: ubuntu-latest
 
-    outputs:
-
-      public_ip: ${{ steps.output.outputs.public_ip }}
-
-    defaults:
-
-      run:
-        working-directory: terraform
-
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -51,387 +23,80 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Setup Terraform
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Create SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+          ssh-keygen -lf ~/.ssh/id_rsa.pub
+
+
+      - name: Generate .env
+        run: |
+          cat <<EOF > .env
+          INTERFLOW_ENV=${{ secrets.INTERFLOW_ENV }}
+          EOF
       - name: Terraform Init
+        working-directory: terraform
         run: terraform init
 
-      - name: Terraform Format
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        run: |
-          terraform plan \
-            -input=false \
-            -out=tfplan
-
       - name: Terraform Apply
+        working-directory: terraform
         run: |
-          terraform apply \
-            -input=false \
-            -auto-approve \
-            tfplan
+          terraform apply -auto-approve \
+            -var="public_key=$(cat ~/.ssh/id_rsa.pub)"
 
       - name: Get Public IP
-        id: output
+        working-directory: terraform
         run: |
+          echo "PUBLIC_IP=$(terraform output -raw public_ip)" >> $GITHUB_ENV
 
-          IP=$(terraform output -raw public_ip)
-
-          if [ -z "$IP" ]; then
-            echo "ERROR: Terraform public_ip output is empty"
-            exit 1
-          fi
-
-          echo "Azure VM Public IP: $IP"
-
-          echo "public_ip=$IP" >> "$GITHUB_OUTPUT"
-
-  wait-ssh:
-
-    name: Wait for SSH
-
-    needs:
-      - terraform
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Configure SSH
-
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
+      - name: Generate Ansible Inventory
         run: |
+          cat > ansible/inventory.ini <<EOF
+          [web]
+          ${PUBLIC_IP} ansible_user=azureuser
+          EOF
 
-          mkdir -p ~/.ssh
-
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Wait SSH
-
+      - name: Wait for SSH
         run: |
-
-          for i in $(seq 1 30); do
-
-            if ssh \
+          for i in {1..30}; do
+            echo "Tentative SSH $i..."
+            ssh \
               -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
               -o ConnectTimeout=5 \
               -i ~/.ssh/id_rsa \
-              "${{ secrets.SSH_USER }}@${{ needs.terraform.outputs.public_ip }}" \
-              "echo SSH_OK"; then
-
-              echo "SSH is available"
-
-              exit 0
-
-            fi
-
-            echo "Waiting for SSH..."
-
+              azureuser@${PUBLIC_IP} exit && break
             sleep 10
-
           done
 
-          echo "SSH unavailable"
-
-          exit 1
-
-  ansible:
-
-    name: Configure Azure VM
-
-    needs:
-      - terraform
-      - wait-ssh
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Add Host Key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${PUBLIC_IP} >> ~/.ssh/known_hosts
 
       - name: Install Ansible
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
 
-          python3 -m pip install --upgrade pip
-
-          pip install ansible
-
-      - name: Configure SSH
-
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
+      - name: Create Ansible Config
         run: |
-
-          mkdir -p ~/.ssh
-
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-
-          chmod 600 ~/.ssh/id_rsa
-
-          ssh-keyscan \
-            -H \
-            "${{ needs.terraform.outputs.public_ip }}" \
-            >> ~/.ssh/known_hosts
-
-      - name: Generate inventory
-
-        run: |
-
-          mkdir -p ansible
-
-          cat > ansible/inventory.ini <<EOF
-
-          [app]
-
-          ${{ needs.terraform.outputs.public_ip }}
-
-
-          [all:vars]
-
-          ansible_user=${{ secrets.SSH_USER }}
-
-          ansible_ssh_private_key_file=~/.ssh/id_rsa
-
-          ansible_python_interpreter=/usr/bin/python3
-
+          cat > ansible.cfg <<EOF
+          [defaults]
+          host_key_checking = False
           EOF
 
-          cat ansible/inventory.ini
-
-      - name: Run Ansible
-
-        run: |
-
-          if [ -f ansible/site.yml ]; then
-
-            ansible-playbook \
-              -i ansible/inventory.ini \
-              ansible/site.yml
-
-          elif [ -f ansible/playbook.yml ]; then
-
-            ansible-playbook \
-              -i ansible/inventory.ini \
-              ansible/playbook.yml
-
-          else
-
-            echo "No Ansible playbook found"
-
-            exit 1
-
-          fi
-
-  deploy:
-
-    name: Deploy InterFlow
-
-    needs:
-      - terraform
-      - ansible
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout
-
-        uses: actions/checkout@v4
-
-      - name: Configure SSH
-
+      - name: Deploy Application
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
+          ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-
-          mkdir -p ~/.ssh
-
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-
-          chmod 600 ~/.ssh/id_rsa
-
-          ssh-keyscan \
-            -H \
-            "${{ needs.terraform.outputs.public_ip }}" \
-            >> ~/.ssh/known_hosts
-
-      - name: Create release archive
-
-        run: |
-
-          tar \
-            --exclude=.git \
-            --exclude=.github \
-            --exclude=node_modules \
-            --exclude=terraform \
-            --exclude=ansible \
-            -czf interflow-release.tar.gz .
-
-      - name: Copy release
-
-        run: |
-
-          scp \
-            -i ~/.ssh/id_rsa \
-            interflow-release.tar.gz \
-            "${{ secrets.SSH_USER }}@${{ needs.terraform.outputs.public_ip }}:/tmp/interflow-release.tar.gz"
-
-      - name: Deploy application
-
-        env:
-          COMMIT_SHA: ${{ github.sha }}
-
-        run: |
-
-          ssh \
-            -i ~/.ssh/id_rsa \
-            "${{ secrets.SSH_USER }}@${{ needs.terraform.outputs.public_ip }}" \
-            "COMMIT_SHA='$COMMIT_SHA' APP_DIR='${{ env.APP_DIR }}' bash -s" <<'REMOTE'
-
-          set -Eeuo pipefail
-
-          APP_DIR="$APP_DIR"
-
-          RELEASES="$APP_DIR/releases"
-
-          CURRENT="$APP_DIR/current"
-
-          PREVIOUS="$APP_DIR/previous"
-
-          RELEASE_ID="$COMMIT_SHA"
-
-          NEW_RELEASE="$RELEASES/$RELEASE_ID"
-
-          echo "Preparing release: $RELEASE_ID"
-
-          sudo mkdir -p "$RELEASES"
-
-          sudo chown -R "$USER:$USER" "$APP_DIR"
-
-          mkdir -p "$NEW_RELEASE"
-
-          tar \
-            -xzf /tmp/interflow-release.tar.gz \
-            -C "$NEW_RELEASE"
-
-          cd "$NEW_RELEASE"
-
-          echo "Starting Docker Compose"
-
-          docker compose up \
-            -d \
-            --build \
-            --remove-orphans
-
-          echo "Waiting for application..."
-
-          HEALTH_OK=false
-
-          for i in $(seq 1 30); do
-
-            if curl \
-              --fail \
-              --silent \
-              --show-error \
-              http://127.0.0.1:3001/api/health \
-              > /dev/null; then
-
-              HEALTH_OK=true
-
-              break
-
-            fi
-
-            sleep 5
-
-          done
-
-          if [ "$HEALTH_OK" != "true" ]; then
-
-            echo "Health check FAILED"
-
-            docker compose ps
-
-            docker compose logs --tail=100
-
-            exit 1
-
-          fi
-
-          echo "Health check OK"
-
-          if [ -L "$CURRENT" ]; then
-
-            rm -f "$PREVIOUS"
-
-            ln -sfn \
-              "$(readlink "$CURRENT")" \
-              "$PREVIOUS"
-
-          fi
-
-          ln -sfn \
-            "$NEW_RELEASE" \
-            "$CURRENT"
-
-          echo "$RELEASE_ID" > "$APP_DIR/.deployed_sha"
-
-          rm -f /tmp/interflow-release.tar.gz
-
-          echo "Deployment successful"
-
-          REMOTE
-
-      - name: Production Health Check
-
-        run: |
-
-          ssh \
-            -i ~/.ssh/id_rsa \
-            "${{ secrets.SSH_USER }}@${{ needs.terraform.outputs.public_ip }}" \
-            "curl --fail http://127.0.0.1:3001/api/health"
-
-      - name: Deployment Summary
-
-        run: |
-
-          echo "## InterFlow Production Deployment" >> "$GITHUB_STEP_SUMMARY"
-
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-
-          echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
-
-          echo "- VM: \`${{ needs.terraform.outputs.public_ip }}\`" >> "$GITHUB_STEP_SUMMARY"
-
-          echo "- Status: SUCCESS" >> "$GITHUB_STEP_SUMMARY"
-
-  rollback:
-
-    name: Automatic Rollback
-
-    needs:
-      - terraform
-      - ansible
-      - deploy
-
-    if: ${{ failure() }}
-
-    uses: ./.github/workflows/rollback.yml
-
-    with:
-
-      public_ip: ${{ needs.terraform.outputs.public_ip }}
-
-    secrets: inherit
+          ansible-playbook \
+            -i ansible/inventory.ini \
+            --private-key ~/.ssh/id_rsa \
+            ansible/playbook.yml
