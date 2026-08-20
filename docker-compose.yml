@@ -24,13 +24,13 @@ services:
     container_name: interflow
     restart: unless-stopped
     ports:
-      - "3003:3003"
+      - "80:80"
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: 3003
+      PORT: 80
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL is required}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
@@ -53,5 +53,5 @@ volumes:
 
 networks:
   shared_network:
-    external: true
+    external: false
     name: shared_network
