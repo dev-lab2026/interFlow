@@ -1,23 +1,24 @@
+---
 - name: Update packages
-  apt:
-    update_cache: yes
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
 
-- name: Install dependencies
-  apt:
+- name: Install Docker packages
+  ansible.builtin.apt:
     name:
       - docker.io
       - docker-compose-v2
-      - git
     state: present
 
 - name: Enable Docker
-  systemd:
+  ansible.builtin.systemd:
     name: docker
-    enabled: yes
+    enabled: true
     state: started
 
 - name: Add azureuser to docker group
-  user:
+  ansible.builtin.user:
     name: azureuser
     groups: docker
-    append: yes
+    append: true

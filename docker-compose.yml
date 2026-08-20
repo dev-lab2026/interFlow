@@ -15,11 +15,14 @@ services:
 
     healthcheck:
       test:
-        - CMD-SHELL
-        - pg_isready -U ${POSTGRES_USER:-interflow} -d ${POSTGRES_DB:-interflow}
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-interflow} -d ${POSTGRES_DB:-interflow}"
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 10s
 
     networks:
       - shared_network
@@ -31,6 +34,7 @@ services:
       dockerfile: Dockerfile
 
     container_name: interflow
+
     restart: unless-stopped
 
     ports:
@@ -58,7 +62,6 @@ services:
       ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:?ENTRA_TENANT_ID is required}
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:?ENTRA_CLIENT_ID is required}
       ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:?ENTRA_CLIENT_SECRET is required}
-
       ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:?ENTRA_REDIRECT_URI is required}
       ENTRA_ADMIN_EMAIL: ${ENTRA_ADMIN_EMAIL:?ENTRA_ADMIN_EMAIL is required}
 
@@ -75,3 +78,4 @@ volumes:
 networks:
   shared_network:
     name: shared_network
+    driver: bridge
