@@ -19,7 +19,7 @@ dotenv.config();
 
 const __dirname = process.cwd();
 const app = express();
-const PORT = Number(process.env.PORT || 3003);
+const PORT = Number(process.env.PORT || 80);
 
 app.disable('x-powered-by');
 app.set('trust proxy', 1);

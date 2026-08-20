@@ -85,3 +85,11 @@ Variables requises : `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`
 `ENTRA_ADMIN_EMAIL` correspond au compte Entra qui reçoit automatiquement le rôle `Admin` lors de sa première connexion.
 
 Un accès d'urgence local reste disponible avec `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+
+
+## GitHub Secrets
+Utiliser un **seul secret GitHub `INTERFLOW_ENV`** contenant l'ensemble du fichier `.env`. Le workflow le recrée automatiquement sur la VM.
+
+## Workflows
+- `deploy.yml` : CI/CD complet.
+- `destroy.yml` : destruction contrôlée de l'infrastructure Azure.

@@ -34,6 +34,12 @@ jobs:
           ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
           ssh-keygen -lf ~/.ssh/id_rsa.pub
 
+
+      - name: Generate .env
+        run: |
+          cat <<EOF > .env
+          INTERFLOW_ENV=${{ secrets.INTERFLOW_ENV }}
+          EOF
       - name: Terraform Init
         working-directory: terraform
         run: terraform init
