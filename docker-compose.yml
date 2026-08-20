@@ -38,16 +38,24 @@ services:
     restart: unless-stopped
 
     ports:
+<<<<<<< HEAD
       - "80:80"
 
+=======
+      - "3003:3003"
+>>>>>>> parent of ecfb9ff (update)
     depends_on:
       postgres:
         condition: service_healthy
 
     environment:
       NODE_ENV: production
+<<<<<<< HEAD
       PORT: 80
 
+=======
+      PORT: 3003
+>>>>>>> parent of ecfb9ff (update)
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
 
       ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL is required}
@@ -77,5 +85,9 @@ volumes:
 
 networks:
   shared_network:
+<<<<<<< HEAD
+=======
+    external: true
+>>>>>>> parent of ecfb9ff (update)
     name: shared_network
     driver: bridge

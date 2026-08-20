@@ -57,14 +57,6 @@ function rateLimit(limit: number, windowMs: number) {
 const allowedRoles = ['Consultant', 'Manager', 'RH', 'Admin'] as const;
 const allowedStatuses = ['Actif', 'Inactif', 'Suspendu'] as const;
 
-function normalizeRole(value: unknown): (typeof allowedRoles)[number] {
-  const normalized = String(value ?? '').trim().toLowerCase();
-  if (normalized === 'admin' || normalized === 'administrateur') return 'Admin';
-  if (normalized === 'manager' || normalized === 'management') return 'Manager';
-  if (normalized === 'rh' || normalized === 'hr' || normalized === 'ressources humaines') return 'RH';
-  return 'Consultant';
-}
-
 type DbUser = {
   id: number;
   uid: string | null;
@@ -88,7 +80,7 @@ function serializeUser(user: DbUser) {
     email: user.email,
     nom: user.nom,
     prenom: user.prenom,
-    role: normalizeRole(user.role),
+    role: user.role,
     title: user.title ?? '',
     department: user.department ?? '',
     avatar: user.avatar ?? '',
@@ -104,7 +96,7 @@ function userSession(user: DbUser) {
     email: user.email,
     nom: user.nom,
     prenom: user.prenom,
-    role: normalizeRole(user.role),
+    role: user.role as 'Consultant' | 'Manager' | 'RH' | 'Admin',
     avatar: user.avatar,
     title: user.title,
     department: user.department,
@@ -405,7 +397,7 @@ app.post('/api/auth/login', rateLimit(10, 15 * 60 * 1000), async (req, res) => {
     setSessionCookie(res, session);
     return res.json({ user: session });
   } catch (error: any) {
-    console.error('Local login error:', error);
+    console.error('Local admin login error:', error);
     return res.status(500).json({ error: 'Erreur lors de la connexion.', details: error?.message });
   }
 });
