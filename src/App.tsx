@@ -21,16 +21,29 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const [currentRole, setCurrentRole] = useState<UserRole>(
-    currentUser?.role || 'Consultant'
-  );
+  const [currentRole, setCurrentRole] = useState<UserRole>('Consultant');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard-consultant');
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
-    if (currentUser?.role === 'Admin') return 'admin-console';
-    if (currentUser?.role === 'Manager') return 'dashboard-manager';
-    if (currentUser?.role === 'RH') return 'dashboard-rh';
-    return 'dashboard-consultant';
-  });
+  const tabForRole = (role: UserRole): ActiveTab => {
+    switch (role) {
+      case 'Admin': return 'admin-console';
+      case 'Manager': return 'dashboard-manager';
+      case 'RH': return 'dashboard-rh';
+      case 'Consultant':
+      default: return 'dashboard-consultant';
+    }
+  };
+
+  const applyAuthenticatedUser = (user: UserSession) => {
+    const role = user.role;
+    setCurrentUser(user);
+    setCurrentRole(role);
+    setActiveTab(tabForRole(role));
+    if (user.consultantId) {
+      const found = consultants.find(c => c.id === user.consultantId);
+      if (found) setSelectedConsultant(found);
+    }
+  };
 
   const isDarkMode = false;
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -46,9 +59,7 @@ export default function App() {
       .then(async response => response.ok ? response.json() : null)
       .then(data => {
         if (data?.user) {
-          setCurrentUser(data.user);
-          setCurrentRole(data.user.role);
-          setActiveTab(data.user.role === 'Admin' ? 'admin-console' : data.user.role === 'Manager' ? 'dashboard-manager' : data.user.role === 'RH' ? 'dashboard-rh' : 'dashboard-consultant');
+          applyAuthenticatedUser(data.user as UserSession);
         }
       })
       .finally(() => setAuthLoading(false));
@@ -68,24 +79,7 @@ export default function App() {
   }, [currentUser]);
 
   const handleLogin = (user: UserSession) => {
-    setCurrentUser(user);
-    setCurrentRole(user.role);
-
-    // If consultant user, map to consultant profile if exists
-    if (user.consultantId) {
-      const found = consultants.find(c => c.id === user.consultantId);
-      if (found) setSelectedConsultant(found);
-    }
-
-    if (user.role === 'Admin') {
-      setActiveTab('admin-console');
-    } else if (user.role === 'Manager') {
-      setActiveTab('dashboard-manager');
-    } else if (user.role === 'RH') {
-      setActiveTab('dashboard-rh');
-    } else {
-      setActiveTab('dashboard-consultant');
-    }
+    applyAuthenticatedUser(user);
   };
 
   const handleLogout = async () => {
@@ -184,9 +178,22 @@ export default function App() {
 
   // Check RBAC view permissions strictly according to single-view scope rules
   const isAdminViewAllowed = currentRole === 'Admin';
-  const isManagerViewAllowed = currentRole === 'Manager' || currentRole === 'Admin';
-  const isRHViewAllowed = currentRole === 'RH' || currentRole === 'Admin';
-  const isConsultantViewAllowed = currentRole === 'Consultant' || currentRole === 'Admin';
+  const isManagerViewAllowed = currentRole === 'Manager';
+  const isRHViewAllowed = currentRole === 'RH';
+  const isConsultantViewAllowed = currentRole === 'Consultant';
+
+  const allowedTabsByRole: Record<UserRole, ActiveTab[]> = {
+    Admin: ['admin-console'],
+    Manager: ['dashboard-manager', 'matching-missions'],
+    RH: ['dashboard-rh'],
+    Consultant: ['dashboard-consultant', 'gestion-cv', 'generation-cv', 'formations', 'matching-missions'],
+  };
+
+  useEffect(() => {
+    if (!allowedTabsByRole[currentRole].includes(activeTab)) {
+      setActiveTab(tabForRole(currentRole));
+    }
+  }, [currentRole, activeTab]);
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${

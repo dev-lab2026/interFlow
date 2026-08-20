@@ -66,7 +66,7 @@ function decodeSession(token: string): AuthUser | null {
       email: payload.email,
       nom: payload.nom,
       prenom: payload.prenom,
-      role: payload.role,
+      role: payload.role === 'Admin' || payload.role === 'Manager' || payload.role === 'RH' || payload.role === 'Consultant' ? payload.role : 'Consultant',
       avatar: payload.avatar,
       title: payload.title,
       department: payload.department,
@@ -123,7 +123,7 @@ export async function getCurrentUser(req: Request): Promise<AuthUser | null> {
   return {
     ...user,
     id: String(user.id),
-    role: user.role as AuthUser['role'],
+    role: (['Consultant', 'Manager', 'RH', 'Admin'].includes(user.role) ? user.role : 'Consultant') as AuthUser['role'],
   };
 }
 

@@ -105,9 +105,9 @@ export const Login: React.FC<LoginProps> = () => {
           <section className="bg-white p-7 rounded-3xl border border-slate-200 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck className="w-4 h-4 text-slate-600" />
-              <h2 className="font-bold">Accès administrateur local</h2>
+              <h2 className="font-bold">Accès local InterFlow</h2>
             </div>
-            <p className="text-xs text-slate-500 mb-5">Compte d’urgence configuré par `ADMIN_EMAIL` / `ADMIN_PASSWORD`.</p>
+            <p className="text-xs text-slate-500 mb-5">Connexion locale disponible pour les comptes InterFlow créés par un administrateur.</p>
 
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <input
