@@ -2,18 +2,92 @@
   become: yes
 
   roles:
-    - docker   # installe docker + docker-compose
+    - docker
 
   tasks:
 
-    - name: Fix Azure mirror
-      ansible.builtin.shell: |
-        sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list
+    # =========================================================
+    # AZURE APT MIRROR
+    # =========================================================
 
-    - name: Update system
+    - name: Fix Azure mirror
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list
+        regexp: 'azure.archive.ubuntu.com'
+        replace: 'archive.ubuntu.com'
+
+    # =========================================================
+    # SYSTEM
+    # =========================================================
+
+    - name: Update apt cache
       ansible.builtin.apt:
         update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade system
+      ansible.builtin.apt:
         upgrade: dist
+
+    # =========================================================
+    # DOCKER SERVICE
+    # =========================================================
+
+    - name: Enable Docker
+      ansible.builtin.systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Check Docker
+      ansible.builtin.command:
+        cmd: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Display Docker version
+      ansible.builtin.debug:
+        msg: "{{ docker_version.stdout }}"
+
+    # =========================================================
+    # DOCKER COMPOSE
+    # =========================================================
+
+    - name: Check Docker Compose
+      ansible.builtin.command:
+        cmd: docker compose version
+      register: compose_version
+      changed_when: false
+
+    - name: Display Docker Compose version
+      ansible.builtin.debug:
+        msg: "{{ compose_version.stdout }}"
+
+    # =========================================================
+    # DOCKER BUILDX
+    # =========================================================
+
+    - name: Check Docker Buildx
+      ansible.builtin.command:
+        cmd: docker buildx version
+      register: buildx_version
+      changed_when: false
+      failed_when: false
+
+    - name: Display Docker Buildx version
+      ansible.builtin.debug:
+        msg: "{{ buildx_version.stdout }}"
+
+    - name: Fail if Docker Buildx is unavailable
+      ansible.builtin.fail:
+        msg: >
+          Docker Buildx is not available.
+          Docker Compose requires Buildx for the current build configuration.
+      when: buildx_version.rc != 0
+
+    # =========================================================
+    # APPLICATION DIRECTORY
+    # =========================================================
 
     - name: Ensure /opt/interflow exists
       ansible.builtin.file:
@@ -23,6 +97,10 @@
         group: root
         mode: '0755'
 
+    # =========================================================
+    # GITHUB
+    # =========================================================
+
     - name: Clone repository
       ansible.builtin.git:
         repo: "https://github.com/dev-lab2026/interFlow.git"
@@ -30,9 +108,135 @@
         version: main
         force: yes
 
-    - name: Deploy application
-      ansible.builtin.shell: |
-        cd /opt/interflow
-        docker compose pull || true
-        docker compose up -d --build
+    # =========================================================
+    # VERIFY APPLICATION FILES
+    # =========================================================
 
+    - name: Check Docker Compose file
+      ansible.builtin.stat:
+        path: /opt/interflow/docker-compose.yml
+      register: compose_file
+
+    - name: Fail if docker-compose.yml is missing
+      ansible.builtin.fail:
+        msg: "docker-compose.yml not found in /opt/interflow"
+      when: not compose_file.stat.exists
+
+    - name: Check Dockerfile
+      ansible.builtin.stat:
+        path: /opt/interflow/Dockerfile
+      register: dockerfile
+
+    - name: Fail if Dockerfile is missing
+      ansible.builtin.fail:
+        msg: "Dockerfile not found in /opt/interflow"
+      when: not dockerfile.stat.exists
+
+    - name: Check package.json
+      ansible.builtin.stat:
+        path: /opt/interflow/package.json
+      register: package_json
+
+    - name: Check package-lock.json
+      ansible.builtin.stat:
+        path: /opt/interflow/package-lock.json
+      register: package_lock
+
+    - name: Display package files
+      ansible.builtin.debug:
+        msg:
+          - "package.json={{ package_json.stat.exists }}"
+          - "package-lock.json={{ package_lock.stat.exists }}"
+
+    - name: Fail if package.json is missing
+      ansible.builtin.fail:
+        msg: "package.json not found"
+      when: not package_json.stat.exists
+
+    - name: Fail if package-lock.json is missing
+      ansible.builtin.fail:
+        msg: "package-lock.json not found. npm ci requires a lock file."
+      when: not package_lock.stat.exists
+
+    # =========================================================
+    # COMPOSE VALIDATION
+    # =========================================================
+
+    - name: Validate Docker Compose configuration
+      ansible.builtin.command:
+        cmd: docker compose config
+        chdir: /opt/interflow
+      register: compose_config
+      changed_when: false
+
+    # =========================================================
+    # PULL POSTGRES ONLY
+    # =========================================================
+
+    - name: Pull PostgreSQL image
+      ansible.builtin.command:
+        cmd: docker compose pull postgres
+        chdir: /opt/interflow
+      register: postgres_pull
+      changed_when: false
+
+    # =========================================================
+    # BUILD INTERFLOW
+    # =========================================================
+
+    - name: Build InterFlow image
+      ansible.builtin.command:
+        cmd: docker compose build --no-cache --progress=plain interflow
+        chdir: /opt/interflow
+      register: docker_build
+
+    # =========================================================
+    # START APPLICATION
+    # =========================================================
+
+    - name: Start InterFlow
+      ansible.builtin.command:
+        cmd: docker compose up -d --remove-orphans
+        chdir: /opt/interflow
+
+    # =========================================================
+    # CONTAINERS
+    # =========================================================
+
+    - name: Docker Compose status
+      ansible.builtin.command:
+        cmd: docker compose ps
+        chdir: /opt/interflow
+      register: compose_ps
+      changed_when: false
+
+    - name: Display containers
+      ansible.builtin.debug:
+        var: compose_ps.stdout_lines
+
+    # =========================================================
+    # HEALTH CHECK
+    # =========================================================
+
+    - name: Wait for InterFlow API
+      ansible.builtin.uri:
+        url: http://127.0.0.1/api/health
+        method: GET
+        status_code: 200
+      register: health
+      retries: 30
+      delay: 5
+      until: health.status == 200
+
+    # =========================================================
+    # SUCCESS
+    # =========================================================
+
+    - name: Deployment successful
+      ansible.builtin.debug:
+        msg:
+          - "======================================"
+          - "InterFlow deployment successful"
+          - "Application: http://{{ ansible_host }}"
+          - "Health: /api/health"
+          - "======================================"
