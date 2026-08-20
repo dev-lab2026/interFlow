@@ -61,14 +61,14 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
             <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
               <BarChart3 className="w-5 h-5" />
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
               Module Direction RH · Pilotage Capital Humain & Compétences
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-black text-slate-900">
             Tableau de Bord Exécutif & KPI RH
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             Suivi des plans de développement de carrière, gestion des catalogues de formations MS Learn et des missions clients.
           </p>
         </div>
@@ -105,7 +105,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Réduction Jours Intercontrat</span>
             <TrendingUp className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{reductionIntercontratRate}%</p>
+          <p className="text-3xl font-black text-emerald-600">{reductionIntercontratRate}%</p>
           <p className="text-[10px] text-slate-500 font-medium">Objectif annuel dépassé</p>
         </div>
 
@@ -116,7 +116,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Taux de Certification</span>
             <Award className="w-4 h-4 text-blue-500" />
           </div>
-          <p className="text-3xl font-black text-blue-600 dark:text-blue-400">{certifiedRatio}%</p>
+          <p className="text-3xl font-black text-blue-600">{certifiedRatio}%</p>
           <p className="text-[10px] text-slate-500 font-medium">Consultants certifiés Microsoft</p>
         </div>
 
@@ -127,7 +127,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Mise à jour CV IA</span>
             <FileCheck2 className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-3xl font-black text-purple-600 dark:text-purple-400">{avgCvUpdateRate}%</p>
+          <p className="text-3xl font-black text-purple-600">{avgCvUpdateRate}%</p>
           <p className="text-[10px] text-slate-500 font-medium">Taux d'actualisation mensuel</p>
         </div>
 
@@ -138,7 +138,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Employabilité Globale</span>
             <Sparkles className="w-4 h-4 text-amber-500" />
           </div>
-          <p className="text-3xl font-black text-amber-600 dark:text-amber-400">87%</p>
+          <p className="text-3xl font-black text-amber-600">87%</p>
           <p className="text-[10px] text-slate-500 font-medium">Moyenne entreprise</p>
         </div>
       </div>
@@ -149,7 +149,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
         <div className={`p-6 rounded-3xl border ${
           isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
         }`}>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-500" />
             Cartographie des Compétences par Pôle d'Expertise
           </h3>
@@ -158,10 +158,10 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
             {categoryCounts.map((cat, idx) => (
               <div key={idx} className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs font-bold">
-                  <span className="text-slate-800 dark:text-slate-200">{cat.name}</span>
-                  <span className="text-indigo-600 dark:text-indigo-400">{cat.count} consultants ({cat.percent}%)</span>
+                  <span className="text-slate-800">{cat.name}</span>
+                  <span className="text-indigo-600">{cat.count} consultants ({cat.percent}%)</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
                   <div 
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-500"
                     style={{ width: `${cat.percent}%` }}
@@ -176,35 +176,35 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
         <div className={`p-6 rounded-3xl border ${
           isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
         }`}>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
             <GraduationCap className="w-4 h-4 text-purple-500" />
             Plans de Développement & Objectifs Stratégiques RH
           </h3>
 
           <div className="space-y-3 text-xs">
             <div className="p-3.5 rounded-2xl bg-purple-500/5 border border-purple-500/20">
-              <p className="font-bold text-purple-900 dark:text-purple-300 mb-1">
+              <p className="font-bold text-purple-900 mb-1">
                 Objectif Q3-Q4 : 100% de consultants certifiés PL-600 ou AI-102
               </p>
-              <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+              <p className="text-slate-600 text-[11px]">
                 Priorité accordée aux modules Copilot Studio et Azure OpenAI pour répondre aux appels d'offres banque/assurance.
               </p>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-blue-500/5 border border-blue-500/20">
-              <p className="font-bold text-blue-900 dark:text-blue-300 mb-1">
+              <p className="font-bold text-blue-900 mb-1">
                 Réduction de l'intercontrat sous la barre des 15 jours
               </p>
-              <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+              <p className="text-slate-600 text-[11px]">
                 Utilisation quotidienne du matching IA pour le repositionnement anticipé à 30 jours de la fin de mission.
               </p>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-              <p className="font-bold text-emerald-900 dark:text-emerald-300 mb-1">
+              <p className="font-bold text-emerald-900 mb-1">
                 Valorisation des TJD (+10% en moyenne)
               </p>
-              <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+              <p className="text-slate-600 text-[11px]">
                 Refonte automatique des CV en version "Client" et "Technique" pour maximiser la valeur perçue.
               </p>
             </div>
@@ -219,7 +219,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
           isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
         }`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-purple-500" />
               Catalogue des Formations ({formations.length})
             </h3>
@@ -240,7 +240,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
                 isDarkMode ? 'bg-slate-800/60 border-slate-700/60' : 'bg-slate-50 border-slate-200'
               }`}>
                 <div className="min-w-0 pr-2">
-                  <p className="font-bold text-slate-900 dark:text-white truncate">{f.nom}</p>
+                  <p className="font-bold text-slate-900 truncate">{f.nom}</p>
                   <p className="text-[10px] text-slate-500">{f.provider} • {f.dureeHours}h • {f.categorie}</p>
                 </div>
                 <span className={`px-2 py-0.5 text-[10px] font-bold rounded-lg shrink-0 ${
@@ -258,7 +258,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
           isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
         }`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-indigo-500" />
               Missions Clients Ouvertes ({missions.length})
             </h3>
@@ -279,7 +279,7 @@ export const DashboardRH: React.FC<DashboardRHProps> = ({
                 isDarkMode ? 'bg-slate-800/60 border-slate-700/60' : 'bg-slate-50 border-slate-200'
               }`}>
                 <div className="min-w-0 pr-2">
-                  <p className="font-bold text-slate-900 dark:text-white truncate">{m.title}</p>
+                  <p className="font-bold text-slate-900 truncate">{m.title}</p>
                   <p className="text-[10px] text-slate-500">{m.client} • {m.sector} • {m.lieu}</p>
                 </div>
                 <span className="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">

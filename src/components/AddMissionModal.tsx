@@ -66,21 +66,21 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
       <div className={`w-full max-w-2xl p-6 md:p-8 rounded-3xl border shadow-2xl overflow-y-auto max-h-[90vh] ${
         isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
       }`}>
-        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-blue-500/10 text-blue-500">
               <Briefcase className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-xl font-black">Ajouter une Nouvelle Mission Client</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 Publiez un nouveau besoin client dans la matrice de matching automatique InterFlow.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -89,7 +89,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Intitulé de la Mission *
               </label>
               <input
@@ -105,7 +105,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Nom du Client ESN *
               </label>
               <input
@@ -123,7 +123,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Secteur d'activité
               </label>
               <select
@@ -143,7 +143,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Lieu / Modalité
               </label>
               <input
@@ -158,7 +158,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 TJD Cible (€/jour)
               </label>
               <input
@@ -175,7 +175,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Durée (Mois)
               </label>
               <input
@@ -190,7 +190,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Date de Démarrage Prévue
               </label>
               <input
@@ -269,7 +269,7 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+            <label className="block text-xs font-bold mb-1.5 text-slate-700">
               Description & Contexte Projet
             </label>
             <textarea
@@ -283,11 +283,11 @@ export const AddMissionModal: React.FC<AddMissionModalProps> = ({
             />
           </div>
 
-          <div className="pt-3 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="pt-3 flex justify-end gap-3 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-100"
             >
               Annuler
             </button>

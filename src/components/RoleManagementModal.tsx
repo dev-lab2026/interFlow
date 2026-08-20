@@ -17,7 +17,7 @@ import {
   Shield
 } from 'lucide-react';
 import { UserSession, UserRole, RolePermission } from '../types';
-import { DEFAULT_USERS, ROLE_PERMISSIONS } from '../mockData';
+import { ROLE_PERMISSIONS } from '../mockData';
 
 interface RoleManagementModalProps {
   isOpen: boolean;
@@ -25,6 +25,7 @@ interface RoleManagementModalProps {
   currentUser: UserSession;
   onSwitchUser: (user: UserSession) => void;
   onUpdateUserRole: (userId: string, newRole: UserRole) => void;
+  users: UserSession[];
   isDarkMode: boolean;
 }
 
@@ -34,10 +35,13 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
   currentUser,
   onSwitchUser,
   onUpdateUserRole,
+  users: usersProp,
   isDarkMode,
 }) => {
   const [activeTab, setActiveTab] = useState<'matrix' | 'users' | 'audit'>('matrix');
-  const [users, setUsers] = useState<UserSession[]>(DEFAULT_USERS);
+  const [users, setUsers] = useState<UserSession[]>(usersProp);
+
+  React.useEffect(() => setUsers(usersProp), [usersProp]);
   const [auditLogs, setAuditLogs] = useState<{ id: string; timestamp: string; user: string; action: string }[]>([
     { id: 'log-1', timestamp: '06/08/2026 10:14', user: 'Alexandre Kershaw', action: 'Accès Console Admin - Attribution Rôles SI' },
     { id: 'log-2', timestamp: '06/08/2026 09:30', user: 'Marc Valette', action: 'Validation positionnement mission Banque Populaire' },
@@ -81,11 +85,11 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-lg">Matrice de Sécurité & Droits d'Accès RBAC</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">
                   Dataverse & Entra ID
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 Isolation par profil unique, contrôle d'accès aux modules et gouvernance des rôles SI
               </p>
             </div>
@@ -110,7 +114,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
             className={`pb-3 border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'matrix'
                 ? 'border-[#0078D4] text-[#0078D4]'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:text-slate-200'
             }`}
           >
             <Sliders className="w-4 h-4" />
@@ -122,7 +126,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
             className={`pb-3 border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'users'
                 ? 'border-[#0078D4] text-[#0078D4]'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:text-slate-200'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -134,7 +138,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
             className={`pb-3 border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'audit'
                 ? 'border-[#0078D4] text-[#0078D4]'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:text-slate-200'
             }`}
           >
             <Key className="w-4 h-4" />
@@ -159,7 +163,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
               </div>
 
               {/* Matrix Table */}
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <table className="w-full text-xs text-left">
                   <thead className={`text-[11px] font-bold uppercase ${
                     isDarkMode ? 'bg-slate-800/80 text-slate-300' : 'bg-slate-100 text-slate-700'
@@ -188,7 +192,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  <tbody className="divide-y divide-slate-200 divide-slate-800">
                     {ROLE_PERMISSIONS.map((perm, idx) => (
                       <tr 
                         key={idx}
@@ -197,12 +201,12 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                         }`}
                       >
                         <td className="p-3.5">
-                          <p className="font-bold text-slate-800 dark:text-slate-100">{perm.module}</p>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{perm.description}</p>
+                          <p className="font-bold text-slate-800">{perm.module}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{perm.description}</p>
                         </td>
                         <td className="p-3.5 text-center">
                           {perm.consultant ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold text-[11px]">
                               <CheckCircle2 className="w-4 h-4" /> Autorisé
                             </span>
                           ) : (
@@ -213,7 +217,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                         </td>
                         <td className="p-3.5 text-center">
                           {perm.manager ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold text-[11px]">
                               <CheckCircle2 className="w-4 h-4" /> Autorisé
                             </span>
                           ) : (
@@ -224,7 +228,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                         </td>
                         <td className="p-3.5 text-center">
                           {perm.rh ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold text-[11px]">
                               <CheckCircle2 className="w-4 h-4" /> Autorisé
                             </span>
                           ) : (
@@ -235,7 +239,7 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                         </td>
                         <td className="p-3.5 text-center">
                           {perm.admin ? (
-                            <span className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 font-semibold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-purple-600 font-semibold text-[11px]">
                               <CheckCircle2 className="w-4 h-4" /> Total (Admin)
                             </span>
                           ) : (
@@ -291,16 +295,16 @@ export const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                                 </span>
                               )}
                             </p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{u.email}</p>
+                            <p className="text-[10px] text-slate-500">{u.email}</p>
                             <p className="text-[10px] text-purple-400 font-semibold">{u.department}</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-2">
+                      <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
                         <div>
                           <span className="text-[10px] font-semibold text-slate-500 block mb-0.5">Rôle Effectif :</span>
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 inline-block">
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 inline-block">
                             {u.role}
                           </span>
                         </div>

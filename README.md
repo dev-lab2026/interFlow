@@ -12,7 +12,7 @@ Ce dépôt met en œuvre une chaîne DevOps complète permettant de déployer au
 
 À chaque `git push` sur la branche `main`, le pipeline :
 
-1. 
+1. Se connecte à Azure.
 2. Crée une infrastructure avec Terraform.
 3. Récupère automatiquement l'adresse IP publique de la VM.
 4. Génère un inventaire Ansible.

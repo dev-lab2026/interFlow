@@ -53,14 +53,14 @@ export const RecommandationFormations: React.FC<RecommandationFormationsProps> =
             <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-500">
               <GraduationCap className="w-5 h-5" />
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-600">
               Module 4 · Moteur d'Upskilling IA
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-black text-slate-900">
             Recommandation Intelligente de Formations & Certifications
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             Parcours optimisés basés sur le profil de {consultant.prenom}, les besoins du marché ESN et les opportunités de mission cibles.
           </p>
         </div>
@@ -76,11 +76,11 @@ export const RecommandationFormations: React.FC<RecommandationFormationsProps> =
             </button>
           )}
 
-          <div className="flex items-center gap-2 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300">
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-700">
             <Sparkles className="w-5 h-5 shrink-0" />
             <div className="text-xs">
               <p className="font-bold">Potentiel d'Employabilité +35%</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">En complétant 2 modules prioritaires</p>
+              <p className="text-[10px] text-slate-500">En complétant 2 modules prioritaires</p>
             </div>
           </div>
         </div>
@@ -122,36 +122,36 @@ export const RecommandationFormations: React.FC<RecommandationFormationsProps> =
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
                     f.priorite === 'Critique'
-                      ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-900'
+                      ? 'bg-red-100 text-red-700 border border-red-200'
                       : f.priorite === 'Haute'
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                      : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-blue-100 text-blue-700'
                   }`}>
                     Priorité {f.priorite}
                   </span>
 
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
                     <TrendingUp className="w-3 h-3" />
                     +{f.impactEmployabilite}% Employabilité
                   </span>
                 </div>
 
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">
+                <h3 className="text-sm font-bold text-slate-900 mb-2 line-clamp-2">
                   {f.nom}
                 </h3>
 
-                <div className="space-y-1.5 mb-4 text-xs text-slate-500 dark:text-slate-400">
+                <div className="space-y-1.5 mb-4 text-xs text-slate-500">
                   <div className="flex items-center justify-between">
                     <span>Plateforme :</span>
-                    <strong className="text-slate-800 dark:text-slate-200 font-semibold">{f.provider}</strong>
+                    <strong className="text-slate-800 font-semibold">{f.provider}</strong>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Catégorie :</span>
-                    <strong className="text-purple-600 dark:text-purple-400 font-semibold">{f.categorie}</strong>
+                    <strong className="text-purple-600 font-semibold">{f.categorie}</strong>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Durée estimée :</span>
-                    <strong className="text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1">
+                    <strong className="text-slate-800 font-semibold flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       {f.dureeHours} heures
                     </strong>
@@ -159,7 +159,7 @@ export const RecommandationFormations: React.FC<RecommandationFormationsProps> =
                   {f.certificationAssociee && (
                     <div className="flex items-center justify-between">
                       <span>Examen associé :</span>
-                      <strong className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
+                      <strong className="text-blue-600 font-semibold flex items-center gap-1">
                         <Award className="w-3.5 h-3.5" />
                         {f.certificationAssociee}
                       </strong>
@@ -169,14 +169,14 @@ export const RecommandationFormations: React.FC<RecommandationFormationsProps> =
               </div>
 
               {/* Progress & Action button */}
-              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="space-y-3 pt-3 border-t border-slate-100">
                 {isEnCours && (
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px] font-semibold text-slate-500">
                       <span>Progression actuelle</span>
                       <span className="text-purple-600 font-bold">{f.progressPercentage}%</span>
                     </div>
-                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                       <div 
                         className="bg-purple-600 h-full rounded-full transition-all duration-500"
                         style={{ width: `${f.progressPercentage}%` }}
@@ -202,7 +202,7 @@ export const RecommandationFormations: React.FC<RecommandationFormationsProps> =
                     href={f.linkUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+                    className="p-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-600 transition-colors"
                     title="Ouvrir sur Microsoft Learn"
                   >
                     <ExternalLink className="w-4 h-4" />

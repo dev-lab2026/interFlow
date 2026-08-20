@@ -63,14 +63,14 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
             <span className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500">
               <Users className="w-5 h-5" />
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
               Module Staffing Manager & Direction ESN
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-black text-slate-900">
             Pilotage du Bench & Staffing Intercontrat
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             Suivi opérationnel des consultants, publication de nouvelles missions et gestion du catalogue de formations.
           </p>
         </div>
@@ -115,7 +115,7 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Bench Intercontrat</span>
             <Users className="w-4 h-4 text-blue-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white">{totalIntercontrat}</p>
+          <p className="text-2xl font-black text-slate-900">{totalIntercontrat}</p>
           <p className="text-[10px] text-slate-500 font-medium">consultants actifs</p>
         </div>
 
@@ -126,7 +126,7 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Durée Moyenne</span>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
-          <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{avgJoursIntercontrat}j</p>
+          <p className="text-2xl font-black text-amber-600">{avgJoursIntercontrat}j</p>
           <p className="text-[10px] text-amber-600 font-medium">-28% vs trimestre dernier</p>
         </div>
 
@@ -137,7 +137,7 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Employabilité Moyenne</span>
             <TrendingUp className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{avgEmployabilite}%</p>
+          <p className="text-2xl font-black text-emerald-600">{avgEmployabilite}%</p>
           <p className="text-[10px] text-emerald-600 font-medium">Haut niveau de qualification</p>
         </div>
 
@@ -148,7 +148,7 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Certifications Obtenues</span>
             <Award className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white">{totalCertsObtenues}</p>
+          <p className="text-2xl font-black text-slate-900">{totalCertsObtenues}</p>
           <p className="text-[10px] text-purple-600 font-medium">PL-600, AI-102, SC-100</p>
         </div>
 
@@ -159,7 +159,7 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase">Staffing Forecast</span>
             <BarChart2 className="w-4 h-4 text-indigo-500" />
           </div>
-          <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400">85%</p>
+          <p className="text-2xl font-black text-indigo-600">85%</p>
           <p className="text-[10px] text-indigo-600 font-medium">Taux placement prévisionnel</p>
         </div>
       </div>
@@ -168,7 +168,7 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
       <div className={`p-6 rounded-3xl border ${
         isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
       }`}>
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
           <UserCheck className="w-4 h-4 text-blue-500" />
           Liste des Consultants en Intercontrat (Bench Actif)
         </h3>
@@ -176,7 +176,7 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+              <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
                 <th className="py-3 px-2">Consultant</th>
                 <th className="py-3 px-2">Grade / Spécialité</th>
                 <th className="py-3 px-2">Manager</th>
@@ -186,10 +186,10 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
                 <th className="py-3 px-2 text-right">Actions Staffing</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100 divide-slate-800/60">
               {consultants.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="py-3 px-2 font-bold text-slate-900 dark:text-white">
+                <tr key={c.id} className="hover:bg-slate-50/40 transition-colors">
+                  <td className="py-3 px-2 font-bold text-slate-900">
                     <div className="flex items-center gap-2.5">
                       <img src={c.avatar} alt={c.prenom} className="w-8 h-8 rounded-xl object-cover" />
                       <div>
@@ -198,16 +198,16 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-2 font-semibold text-slate-700 dark:text-slate-300">
-                    <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold text-[10px] mr-1">
+                  <td className="py-3 px-2 font-semibold text-slate-700">
+                    <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px] mr-1">
                       {c.grade}
                     </span>
                     <span className="text-slate-500 text-[11px]">{c.title}</span>
                   </td>
-                  <td className="py-3 px-2 font-medium text-slate-600 dark:text-slate-400">{c.manager}</td>
-                  <td className="py-3 px-2 font-bold text-amber-600 dark:text-amber-400">{c.joursIntercontrat} jours</td>
-                  <td className="py-3 px-2 font-black text-emerald-600 dark:text-emerald-400">{c.employabilite}%</td>
-                  <td className="py-3 px-2 font-semibold text-slate-700 dark:text-slate-300">
+                  <td className="py-3 px-2 font-medium text-slate-600">{c.manager}</td>
+                  <td className="py-3 px-2 font-bold text-amber-600">{c.joursIntercontrat} jours</td>
+                  <td className="py-3 px-2 font-black text-emerald-600">{c.employabilite}%</td>
+                  <td className="py-3 px-2 font-semibold text-slate-700">
                     {c.certifications.length} valides
                   </td>
                   <td className="py-3 px-2 text-right">

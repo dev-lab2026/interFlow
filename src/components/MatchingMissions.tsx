@@ -89,14 +89,14 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
             <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-500">
               <Target className="w-5 h-5" />
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-cyan-600">
               Module 5 · Scoring IA Positionnement Mission
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-black text-slate-900">
             Matching Automatique Consultant vs Exigences Missions
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             Algorithme de comparaison d'écarts de compétences, taux de compatibilité et plan d'upskilling accéléré.
           </p>
         </div>
@@ -112,7 +112,7 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
             </button>
           )}
 
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold text-xs">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 font-bold text-xs">
             <Sparkles className="w-4 h-4" />
             <span>{matches.length} Opportunités Qualifiées</span>
           </div>
@@ -120,12 +120,12 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
       </div>
 
       {positionedMissionId && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-between animate-fadeIn">
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 font-bold text-xs flex items-center justify-between animate-fadeIn">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5" />
             <span>Positionnement transmis au Staffing Manager et au Client avec succès ! Fiche de présentation IA jointe.</span>
           </div>
-          <span className="text-[10px] bg-emerald-200 dark:bg-emerald-950 px-2 py-0.5 rounded">Statut : Transmis</span>
+          <span className="text-[10px] bg-emerald-200 px-2 py-0.5 rounded">Statut : Transmis</span>
         </div>
       )}
 
@@ -142,15 +142,15 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
                   : isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200/80 shadow-xs'
               }`}
             >
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
                 {/* Mission Header */}
                 <div className="space-y-2 max-w-xl">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 flex items-center gap-1">
                       <Building2 className="w-3 h-3 text-slate-400" />
                       {mission.client}
                     </span>
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300">
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
                       {mission.sector}
                     </span>
                     <span className="text-xs font-semibold text-slate-400 flex items-center gap-1">
@@ -159,10 +159,10 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  <h3 className="text-lg font-black text-slate-900">
                     {mission.title}
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-600 leading-relaxed">
                     {mission.description}
                   </p>
                 </div>
@@ -179,7 +179,7 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
                       </p>
                     </div>
 
-                    <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 p-2 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-100 p-2 flex items-center justify-center">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-black text-sm">
                         {scoreMatch}%
                       </div>
@@ -214,13 +214,13 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
                 {/* Matching skills */}
                 <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-                  <h4 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-emerald-700 mb-2 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" />
                     Compétences Maîtrisées Conformes ({matchingSkills.length})
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
                     {matchingSkills.map((sk, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                      <span key={i} className="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                         ✓ {sk}
                       </span>
                     ))}
@@ -230,12 +230,12 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
                 {/* Missing skills & Readiness delay */}
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4" />
                       Écarts de Compétences Détectés ({missingSkills.length})
                     </h4>
                     {readinessDelayDays > 0 && (
-                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-300 flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         Montée en niveau : ~{readinessDelayDays} jours
                       </span>
@@ -247,9 +247,9 @@ export const MatchingMissions: React.FC<MatchingMissionsProps> = ({
                   ) : (
                     <div className="space-y-2">
                       {missingSkills.map((ms, i) => (
-                        <div key={i} className="flex items-center justify-between text-xs bg-amber-100/50 dark:bg-amber-950/50 p-2 rounded-xl">
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{ms.skillName}</span>
-                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                        <div key={i} className="flex items-center justify-between text-xs bg-amber-100/50 bg-amber-950/50 p-2 rounded-xl">
+                          <span className="font-semibold text-slate-800">{ms.skillName}</span>
+                          <span className="text-[10px] font-bold text-amber-700">
                             Requis : {ms.requiredLevel} · Durée : {ms.estimatedDaysToAcquire}j
                           </span>
                         </div>

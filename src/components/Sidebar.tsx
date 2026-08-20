@@ -20,7 +20,6 @@ export type ActiveTab =
   | 'generation-cv'
   | 'formations'
   | 'matching-missions'
-  | 'copilot-rh'
   | 'dashboard-manager'
   | 'dashboard-rh'
   | 'admin-console';
@@ -75,14 +74,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: 'Scoring IA',
       roles: ['Consultant', 'Manager']
     },
-    {
-      id: 'copilot-rh' as ActiveTab,
-      label: 'Copilot RH',
-      icon: Bot,
-      badge: 'IA Chat',
-      highlight: true,
-      roles: ['Consultant']
-    }
   ].filter(item => item.roles.includes(currentRole));
 
   const managementNav = [
@@ -148,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <span className="truncate">{item.label}</span>
                     </div>
 
-                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide bg-purple-200 text-purple-800">
                       {item.badge}
                     </span>
                   </button>
@@ -197,7 +188,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         isActive 
                           ? 'bg-[#0078D4]/15 text-[#0078D4]' 
                           : item.highlight
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                          ? 'bg-amber-100 text-amber-800 bg-amber-950 text-amber-300'
                           : isDarkMode
                           ? 'bg-slate-800 text-slate-400'
                           : 'bg-[#EDEBE9] text-[#323130]'
@@ -272,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }`}>
         <div className="flex items-center gap-2 mb-1">
           <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-          <span className="font-semibold text-[11px] text-slate-700 dark:text-slate-300">Dataverse RBAC In-Effect</span>
+          <span className="font-semibold text-[11px] text-slate-700">Dataverse RBAC In-Effect</span>
         </div>
         <p className="text-[10px] leading-tight text-slate-400">
           Isolation stricte par rôle active ({currentRole}).

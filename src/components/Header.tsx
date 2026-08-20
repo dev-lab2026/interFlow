@@ -3,8 +3,6 @@ import {
   Grid, 
   Search, 
   Bell, 
-  Sun, 
-  Moon, 
   UserCheck, 
   Sparkles,
   Briefcase,
@@ -28,8 +26,6 @@ interface HeaderProps {
   onLogout: () => void;
   onOpenRoleModal: () => void;
   onNavigateTab: (tab: any) => void;
-  isDarkMode: boolean;
-  onToggleDarkMode: () => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
 }
@@ -43,8 +39,6 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenRoleModal,
   onNavigateTab,
-  isDarkMode,
-  onToggleDarkMode,
   searchTerm,
   onSearchChange,
 }) => {
@@ -52,14 +46,14 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className={`h-16 border-b transition-colors duration-200 px-4 md:px-6 flex items-center justify-between sticky top-0 z-40 ${
-      isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-800 shadow-xs'
+      'bg-white border-slate-200 text-slate-800 shadow-xs'
     }`}>
       {/* Left: App Launcher & Logo */}
       <div className="flex items-center gap-3">
         <button 
           title="Microsoft 365 Launcher"
           className={`p-2 rounded-lg transition-colors ${
-            isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
+            'hover:bg-slate-100 text-slate-600'
           }`}
         >
           <Grid className="w-5 h-5" />
@@ -70,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Sparkles className="w-5 h-5 text-amber-300" />
           </div>
           <div>
-            <span className="font-black text-lg tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 dark:from-blue-400 dark:via-indigo-400 dark:to-cyan-400 bg-clip-text text-transparent">
+            <span className="font-black text-lg tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent">
               INTERFLOW
             </span>
           </div>
@@ -90,28 +84,11 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Theme Toggle */}
-        <button
-          onClick={onToggleDarkMode}
-          className={`p-2 rounded-xl border transition-colors ${
-            isDarkMode 
-              ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700' 
-              : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
-          }`}
-          title="Basculer le mode sombre / clair"
-        >
-          {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
-
         {/* Notification Bell */}
         <div className="relative">
           <button 
             title="Notifications InterFlow"
-            className={`p-2 rounded-xl border relative transition-colors ${
-              isDarkMode 
-                ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' 
-                : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
-            }`}
+            className="p-2 rounded-xl border relative transition-colors bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
@@ -122,11 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl border transition-all ${
-              isDarkMode 
-                ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' 
-                : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-            }`}
+            className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl border transition-all bg-slate-50 border-slate-200 hover:bg-slate-100"
           >
             <img 
               src={currentUser?.avatar || selectedConsultant.avatar} 
@@ -146,21 +119,21 @@ export const Header: React.FC<HeaderProps> = ({
 
           {showProfileMenu && (
             <div className={`absolute right-0 mt-2 w-72 rounded-2xl border shadow-2xl p-2 z-50 transition-all ${
-              isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-800'
+              'bg-white border-slate-200 text-slate-800'
             }`}>
               {/* Active user header */}
               {currentUser && (
-                <div className="p-3 border-b border-slate-200 dark:border-slate-800 mb-2 bg-blue-50/50 dark:bg-blue-950/30 rounded-xl">
+                <div className="p-3 border-b border-slate-200 mb-2 bg-blue-50/50 bg-blue-950/30 rounded-xl">
                   <div className="flex items-center gap-2.5">
                     <img src={currentUser.avatar} alt={currentUser.prenom} className="w-8 h-8 rounded-lg object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold truncate">{currentUser.prenom} {currentUser.nom}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{currentUser.email}</p>
                     </div>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-[10px]">
                     <span className="font-semibold text-slate-500">Rôle Assigné :</span>
-                    <span className="font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                    <span className="font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700">
                       {currentUser.role}
                     </span>
                   </div>
@@ -175,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
                       setShowProfileMenu(false);
                     }}
                     className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-colors text-xs font-bold text-purple-400 ${
-                      isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-slate-100'
+                      'hover:bg-slate-100'
                     }`}
                   >
                     <Shield className="w-4 h-4 text-purple-500" />
@@ -189,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
                     setShowProfileMenu(false);
                   }}
                   className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-colors text-xs font-semibold ${
-                    isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-700'
+                    'hover:bg-slate-100 text-slate-700'
                   }`}
                 >
                   <Key className="w-4 h-4 text-blue-500" />
@@ -200,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Consultant switcher section for demo */}
               {currentRole === 'Consultant' && (
                 <>
-                  <div className="p-2 border-t border-slate-200 dark:border-slate-800 my-1">
+                  <div className="p-2 border-t border-slate-200 my-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Changer de consultant démo</p>
                   </div>
 
@@ -213,14 +186,14 @@ export const Header: React.FC<HeaderProps> = ({
                       }}
                       className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-colors text-xs ${
                         c.id === selectedConsultant.id
-                          ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold'
-                          : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                          ? 'bg-blue-50/60 text-blue-600 font-semibold'
+                          : 'hover:bg-slate-100'
                       }`}
                     >
                       <img src={c.avatar} alt={c.prenom} className="w-6 h-6 rounded-lg object-cover" />
                       <div className="truncate">
                         <p className="font-semibold text-xs truncate">{c.prenom} {c.nom}</p>
-                        <p className="text-[9px] text-slate-500 dark:text-slate-400 truncate">{c.title}</p>
+                        <p className="text-[9px] text-slate-500 truncate">{c.title}</p>
                       </div>
                     </button>
                   ))}
@@ -228,13 +201,13 @@ export const Header: React.FC<HeaderProps> = ({
               )}
 
               {/* Logout Button */}
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
+              <div className="pt-2 border-t border-slate-200 mt-2">
                 <button
                   onClick={() => {
                     setShowProfileMenu(false);
                     onLogout();
                   }}
-                  className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-colors text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-colors text-xs font-bold text-red-600 hover:bg-red-50 hover:bg-red-950/40"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Se déconnecter de la session</span>

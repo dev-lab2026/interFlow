@@ -36,9 +36,9 @@ import { ROLE_PERMISSIONS } from '../mockData';
 
 interface GestionUsersAdminProps {
   users: UserSession[];
-  onAddUser: (newUser: UserSession) => void;
-  onUpdateUser: (updatedUser: UserSession) => void;
-  onDeleteUser: (userId: string) => void;
+  onAddUser: (newUser: UserSession) => Promise<unknown>;
+  onUpdateUser: (updatedUser: UserSession) => Promise<unknown>;
+  onDeleteUser: (userId: string) => Promise<unknown>;
   isDarkMode: boolean;
 }
 
@@ -55,6 +55,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<UserSession | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // PostgreSQL / Cloud SQL Database Configuration State
   const [dbConfig, setDbConfig] = useState({
@@ -112,7 +113,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
     role: 'Consultant' as UserRole,
     title: '',
     department: 'Practice Cloud & Business Apps',
-    status: 'Actif' as 'Actif' | 'Inactif'
+    status: 'Actif' as 'Actif' | 'Inactif',
   });
 
   const showNotification = (msg: string) => {
@@ -120,43 +121,54 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleCreateUser = (e: React.FormEvent) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nom || !formData.prenom || !formData.email) return;
-
-    const newUser: UserSession = {
-      id: `user-${Date.now()}`,
-      nom: formData.nom,
-      prenom: formData.prenom,
-      email: formData.email,
-      role: formData.role,
-      title: formData.title || `${formData.role} InterFlow`,
-      department: formData.department,
-      avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250`,
-      status: formData.status,
-      lastLogin: 'Jamais'
-    };
-
-    onAddUser(newUser);
-    setIsAddModalOpen(false);
-    setFormData({
-      nom: '',
-      prenom: '',
-      email: '',
-      role: 'Consultant',
-      title: '',
-      department: 'Practice Cloud & Business Apps',
-      status: 'Actif'
-    });
-    showNotification(`Utilisateur ${newUser.prenom} ${newUser.nom} créé et droits d'accès configurés avec succès.`);
+    if (!formData.nom.trim() || !formData.prenom.trim() || !formData.email.trim()) {
+      showNotification('Complétez les champs obligatoires.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const newUser = {
+        id: '',
+        nom: formData.nom.trim(),
+        prenom: formData.prenom.trim(),
+        email: formData.email.trim().toLowerCase(),
+        role: formData.role,
+        title: formData.title.trim() || `${formData.role} InterFlow`,
+        department: formData.department,
+        avatar: '',
+        status: formData.status,
+        lastLogin: 'Jamais',
+      } as UserSession;
+      await onAddUser(newUser);
+      setIsAddModalOpen(false);
+      setFormData({ nom: '', prenom: '', email: '', role: 'Consultant', title: '', department: 'Practice Cloud & Business Apps', status: 'Actif', });
+      showNotification(`Utilisateur ${newUser.prenom} ${newUser.nom} créé avec succès.`);
+    } catch (error) {
+      showNotification(error instanceof Error ? error.message : 'Erreur lors de la création.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
-    onUpdateUser(editingUser);
-    setEditingUser(null);
-    showNotification(`Droits d'accès et profil de ${editingUser.prenom} ${editingUser.nom} mis à jour.`);
+    if (!editingUser.nom.trim() || !editingUser.prenom.trim() || !editingUser.email.trim()) {
+      showNotification('Nom, prénom et email sont obligatoires.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await onUpdateUser(editingUser);
+      setEditingUser(null);
+      showNotification(`Profil de ${editingUser.prenom} ${editingUser.nom} mis à jour.`);
+    } catch (error) {
+      showNotification(error instanceof Error ? error.message : 'Erreur lors de la mise à jour.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleTestAdConnection = () => {
@@ -246,7 +258,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
       u.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.department.toLowerCase().includes(searchTerm.toLowerCase());
+      (u.department || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesRole = roleFilter === 'Tous' || u.role === roleFilter;
 
@@ -276,9 +288,9 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
               <span>Console Administrateur SI & Gouvernance</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Administration SI, Connexion Active Directory & Droits d'Accès
+              Administration SI, Connexion Microsoft Entra ID & Droits d'Accès
             </h1>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
+            <p className="text-xs md:text-sm text-slate-500 max-w-2xl">
               Configuration de l'authentification Entra ID / SSO Azure AD, attribution des droits et règles RBAC, et personnalisation de la plateforme.
             </p>
           </div>
@@ -410,7 +422,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
           </div>
 
           {/* User Table */}
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full text-xs text-left">
               <thead className={`text-[11px] font-bold uppercase ${
                 isDarkMode ? 'bg-slate-800/80 text-slate-300' : 'bg-slate-100 text-slate-700'
@@ -423,7 +435,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                   <th className="p-3.5 text-right">Actions Droits & Comptes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-200 divide-slate-800">
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-slate-400">
@@ -437,8 +449,8 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                         <div className="flex items-center gap-3">
                           <img src={user.avatar} alt={user.prenom} className="w-9 h-9 rounded-xl object-cover ring-1 ring-purple-500/30" />
                           <div>
-                            <p className="font-bold text-slate-900 dark:text-slate-100">{user.prenom} {user.nom}</p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{user.email}</p>
+                            <p className="font-bold text-slate-900">{user.prenom} {user.nom}</p>
+                            <p className="text-[10px] text-slate-500">{user.email}</p>
                           </div>
                         </div>
                       </td>
@@ -446,12 +458,12 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                       <td className="p-3.5">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${
                           user.role === 'Consultant'
-                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                            ? 'bg-blue-100 text-blue-700 bg-blue-950 text-blue-300'
                             : user.role === 'Manager'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            ? 'bg-amber-100 text-amber-800 bg-amber-950 text-amber-300'
                             : user.role === 'RH'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+                            ? 'bg-emerald-100 text-emerald-800 bg-emerald-950 text-emerald-300'
+                            : 'bg-purple-100 text-purple-800 bg-purple-950 text-purple-300'
                         }`}>
                           {user.role === 'Consultant' && <UserCheck className="w-3 h-3" />}
                           {user.role === 'Manager' && <Briefcase className="w-3 h-3" />}
@@ -462,7 +474,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                       </td>
 
                       <td className="p-3.5">
-                        <p className="font-semibold text-slate-800 dark:text-slate-200">{user.title}</p>
+                        <p className="font-semibold text-slate-800">{user.title}</p>
                         <p className="text-[10px] text-slate-400">{user.department}</p>
                       </td>
 
@@ -491,11 +503,14 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                             <button
                               onClick={() => {
                                 if (confirm(`Confirmez-vous la suppression du compte de ${user.prenom} ${user.nom} ?`)) {
-                                  onDeleteUser(user.id);
-                                  showNotification(`Compte et accès supprimés.`);
+                                  setIsSubmitting(true);
+                                  onDeleteUser(user.id)
+                                    .then(() => showNotification('Compte et accès supprimés.'))
+                                    .catch((error) => showNotification(error instanceof Error ? error.message : 'Erreur lors de la suppression.'))
+                                    .finally(() => setIsSubmitting(false));
                                 }
                               }}
-                              className="p-1.5 rounded-lg border border-red-200 dark:border-red-950 hover:bg-red-50 dark:hover:bg-red-950/40 text-red-500 transition-colors"
+                              className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 hover:bg-red-950/40 text-red-500 transition-colors"
                               title="Révoquer l'accès"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -517,7 +532,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
         <div className={`p-6 md:p-8 rounded-3xl border space-y-6 ${
           isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
         }`}>
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
                 <Server className="w-6 h-6" />
@@ -635,14 +650,14 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
             </div>
           </div>
 
-          <div className="pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200">
             <span className="text-xs text-slate-400">Dernière synchronisation réussie : {adConfig.lastSyncTime}</span>
             
             <div className="flex gap-3">
               <button
                 onClick={handleTestAdConnection}
                 disabled={isSyncing}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all flex items-center gap-2"
               >
                 <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-blue-500' : ''}`} />
                 <span>{isSyncing ? 'Synchronisation...' : 'Tester la connexion Azure AD'}</span>
@@ -665,7 +680,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
         <div className={`p-6 md:p-8 rounded-3xl border space-y-6 ${
           isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
         }`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-500">
                 <Database className="w-6 h-6" />
@@ -845,14 +860,14 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
             </div>
           </div>
 
-          <div className="pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200">
             <span className="text-xs text-slate-400">Dernier test de latence : {dbConfig.lastPing}</span>
 
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleMigrateDb}
                 disabled={isMigrating}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all flex items-center gap-2"
               >
                 <RefreshCw className={`w-4 h-4 ${isMigrating ? 'animate-spin text-purple-500' : ''}`} />
                 <span>{isMigrating ? 'Migration en cours...' : 'Synchroniser Schéma (Drizzle)'}</span>
@@ -861,7 +876,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
               <button
                 onClick={handleTestDbConnection}
                 disabled={isDbTesting}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition-all flex items-center gap-2"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-cyan-700 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition-all flex items-center gap-2"
               >
                 <Database className={`w-4 h-4 ${isDbTesting ? 'animate-bounce text-cyan-400' : ''}`} />
                 <span>{isDbTesting ? 'Connexion...' : 'Tester Connexion PostgreSQL'}</span>
@@ -895,7 +910,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full text-xs text-left">
               <thead className={`text-[11px] font-bold uppercase ${
                 isDarkMode ? 'bg-slate-800/80 text-slate-300' : 'bg-slate-100 text-slate-700'
@@ -908,7 +923,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                   <th className="p-3.5 text-center">Admin SI</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-200 divide-slate-800">
                 {ROLE_PERMISSIONS.map((perm, idx) => (
                   <tr key={idx} className={isDarkMode ? 'hover:bg-slate-800/40' : 'hover:bg-slate-50'}>
                     <td className="p-3.5">
@@ -940,7 +955,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
         <div className={`p-6 md:p-8 rounded-3xl border space-y-6 ${
           isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
         }`}>
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
                 <Palette className="w-6 h-6" />
@@ -1032,7 +1047,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end border-t border-slate-200 dark:border-slate-800">
+          <div className="pt-4 flex justify-end border-t border-slate-200">
             <button
               onClick={() => showNotification("Personnalisation de l'application enregistrée.")}
               className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/20 flex items-center gap-2"
@@ -1050,7 +1065,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
           <div className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-6 ${
             isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
           }`}>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center font-bold">
                   <UserPlus className="w-5 h-5" />
@@ -1060,7 +1075,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                   <p className="text-xs text-slate-400">Création du compte et attribution du rôle RBAC</p>
                 </div>
               </div>
-              <button onClick={() => setIsAddModalOpen(false)} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+              <button onClick={() => setIsAddModalOpen(false)} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1155,20 +1170,21 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                 </select>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl font-bold border border-slate-300 dark:border-slate-700"
+                  className="px-4 py-2.5 rounded-xl font-bold border border-slate-300"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="px-5 py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
-                  <span>Créer Compte & Accès</span>
+                  <span>{isSubmitting ? 'Création…' : 'Créer Compte & Accès'}</span>
                 </button>
               </div>
             </form>
@@ -1182,7 +1198,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
           <div className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-6 ${
             isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
           }`}>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <div className="flex items-center gap-3">
                 <img src={editingUser.avatar} alt={editingUser.prenom} className="w-10 h-10 rounded-2xl object-cover ring-2 ring-purple-500/50" />
                 <div>
@@ -1190,7 +1206,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                   <p className="text-xs text-slate-400">{editingUser.email}</p>
                 </div>
               </div>
-              <button onClick={() => setEditingUser(null)} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+              <button onClick={() => setEditingUser(null)} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1263,20 +1279,21 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                 />
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-4 py-2.5 rounded-xl font-bold border border-slate-300 dark:border-slate-700"
+                  className="px-4 py-2.5 rounded-xl font-bold border border-slate-300"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="px-5 py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
-                  <span>Enregistrer Droits</span>
+                  <span>{isSubmitting ? 'Enregistrement…' : 'Enregistrer Droits'}</span>
                 </button>
               </div>
             </form>

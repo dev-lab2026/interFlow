@@ -24,11 +24,11 @@ export const AccessRestricted: React.FC<AccessRestrictedProps> = ({
       </div>
 
       <div className="space-y-2">
-        <span className="text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/30">
+        <span className="text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300/30">
           Isolation des Profils & Sécurité RBAC Dataverse
         </span>
         <h2 className="text-xl md:text-2xl font-black">Accès Restreint — Profil non Habilité</h2>
-        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+        <p className="text-xs md:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
           Votre compte est actuellement identifié sous le rôle unique <strong className="text-blue-500">{currentRole}</strong>. Conformément aux règles de sécurité, chaque utilisateur accède exclusivement à son propre périmètre de données.
         </p>
       </div>
@@ -37,11 +37,11 @@ export const AccessRestricted: React.FC<AccessRestrictedProps> = ({
       <div className={`p-4 rounded-2xl border text-left text-xs space-y-2 ${
         isDarkMode ? 'bg-slate-800/50 border-slate-700/80 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
       }`}>
-        <p className="font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+        <p className="font-bold flex items-center gap-2 text-slate-900">
           <Lock className="w-4 h-4 text-amber-500" />
           Comment modifier vos droits d'accès ?
         </p>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+        <p className="text-[11px] text-slate-500 leading-relaxed">
           Seul un <strong>Administrateur SI & Dataverse</strong> habilité peut ajouter des utilisateurs, modifier les rôles Entra ID ou vous attribuer la licence <strong>{requiredRole}</strong> depuis la console d'administration centralisée.
         </p>
       </div>

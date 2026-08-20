@@ -6,7 +6,6 @@ import { GestionCV } from './components/GestionCV';
 import { GenerationCV } from './components/GenerationCV';
 import { RecommandationFormations } from './components/RecommandationFormations';
 import { MatchingMissions } from './components/MatchingMissions';
-import { CopilotRH } from './components/CopilotRH';
 import { DashboardManager } from './components/DashboardManager';
 import { DashboardRH } from './components/DashboardRH';
 import { GestionUsersAdmin } from './components/GestionUsersAdmin';
@@ -14,27 +13,13 @@ import { Login } from './components/Login';
 import { RoleManagementModal } from './components/RoleManagementModal';
 import { AccessRestricted } from './components/AccessRestricted';
 
-import { INITIAL_CONSULTANTS, INITIAL_MISSIONS, INITIAL_FORMATIONS, DEFAULT_USERS } from './mockData';
+import { INITIAL_CONSULTANTS, INITIAL_MISSIONS, INITIAL_FORMATIONS } from './mockData';
 import { Consultant, Mission, Formation, UserSession, UserRole } from './types';
 
 export default function App() {
-  const [users, setUsers] = useState<UserSession[]>(() => {
-    try {
-      const saved = localStorage.getItem('interflow_users_db');
-      return saved ? JSON.parse(saved) : DEFAULT_USERS;
-    } catch {
-      return DEFAULT_USERS;
-    }
-  });
-
-  const [currentUser, setCurrentUser] = useState<UserSession | null>(() => {
-    try {
-      const saved = localStorage.getItem('interflow_session');
-      return saved ? JSON.parse(saved) : DEFAULT_USERS[0];
-    } catch {
-      return DEFAULT_USERS[0];
-    }
-  });
+  const [users, setUsers] = useState<UserSession[]>([]);
+  const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const [currentRole, setCurrentRole] = useState<UserRole>(
     currentUser?.role || 'Consultant'
@@ -47,7 +32,7 @@ export default function App() {
     return 'dashboard-consultant';
   });
 
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const isDarkMode = false;
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isRoleModalOpen, setIsRoleModalOpen] = useState<boolean>(false);
 
@@ -57,16 +42,30 @@ export default function App() {
   const [formations, setFormations] = useState<Formation[]>(INITIAL_FORMATIONS);
 
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('interflow_session', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('interflow_session');
-    }
-  }, [currentUser]);
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(async response => response.ok ? response.json() : null)
+      .then(data => {
+        if (data?.user) {
+          setCurrentUser(data.user);
+          setCurrentRole(data.user.role);
+          setActiveTab(data.user.role === 'Admin' ? 'admin-console' : data.user.role === 'Manager' ? 'dashboard-manager' : data.user.role === 'RH' ? 'dashboard-rh' : 'dashboard-consultant');
+        }
+      })
+      .finally(() => setAuthLoading(false));
+  }, []);
+
+  const reloadUsers = async () => {
+    const response = await fetch('/api/db/users', { credentials: 'include' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || 'Impossible de charger les utilisateurs');
+    setUsers(Array.isArray(data.users) ? data.users : []);
+    return data.users as UserSession[];
+  };
 
   useEffect(() => {
-    localStorage.setItem('interflow_users_db', JSON.stringify(users));
-  }, [users]);
+    if (!currentUser || currentUser.role !== 'Admin') return;
+    reloadUsers().catch(error => console.error('Chargement utilisateurs:', error));
+  }, [currentUser]);
 
   const handleLogin = (user: UserSession) => {
     setCurrentUser(user);
@@ -89,24 +88,63 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    window.location.href = '/api/auth/logout?entra=1';
   };
 
-  const handleAddUser = (newUser: UserSession) => {
-    setUsers(prev => [newUser, ...prev]);
+  const handleAddUser = async (newUser: UserSession) => {
+    const password = (newUser as UserSession & { password?: string }).password;
+    const response = await fetch('/api/db/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        nom: newUser.nom.trim(),
+        prenom: newUser.prenom.trim(),
+        email: newUser.email.trim(),
+        password,
+        role: newUser.role,
+        title: newUser.title?.trim() || null,
+        department: newUser.department?.trim() || null,
+        status: newUser.status || 'Actif',
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || data.details || 'Impossible de créer l’utilisateur');
+    await reloadUsers();
+    return data.user;
   };
 
-  const handleUpdateUser = (updatedUser: UserSession) => {
-    setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
-    if (currentUser?.id === updatedUser.id) {
-      setCurrentUser(updatedUser);
-      setCurrentRole(updatedUser.role);
-    }
+  const handleUpdateUser = async (updatedUser: UserSession) => {
+    const payload: Record<string, unknown> = {
+      nom: updatedUser.nom.trim(),
+      prenom: updatedUser.prenom.trim(),
+      email: updatedUser.email.trim(),
+      role: updatedUser.role,
+      title: updatedUser.title?.trim() || null,
+      department: updatedUser.department?.trim() || null,
+      status: updatedUser.status || 'Actif',
+    };
+    const response = await fetch(`/api/db/users/${updatedUser.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || data.details || 'Impossible de mettre à jour l’utilisateur');
+    const saved = data.user as UserSession;
+    await reloadUsers();
+    if (currentUser?.id === updatedUser.id && saved) { setCurrentUser(saved); setCurrentRole(saved.role); }
+    return saved;
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(prev => prev.filter(u => u.id !== userId));
+
+  const handleDeleteUser = async (userId: string) => {
+    const response = await fetch(`/api/db/users/${userId}`, { method: 'DELETE', credentials: 'include' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || data.details || 'Impossible de supprimer l’utilisateur');
+    await reloadUsers();
   };
 
   const handleUpdateConsultantCV = (score: number, _updatedKeywords: string[]) => {
@@ -131,6 +169,10 @@ export default function App() {
   const handleAddFormation = (newFormation: Formation) => {
     setFormations(prev => [newFormation, ...prev]);
   };
+
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-800">Chargement sécurisé…</div>;
+  }
 
   // If user is not logged in, render Login component
   if (!currentUser) {
@@ -157,8 +199,6 @@ export default function App() {
         onLogout={handleLogout}
         onOpenRoleModal={() => setIsRoleModalOpen(true)}
         onNavigateTab={setActiveTab}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
       />
@@ -266,12 +306,6 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'copilot-rh' && (
-              <CopilotRH
-                consultant={selectedConsultant}
-                isDarkMode={isDarkMode}
-              />
-            )}
 
             {activeTab === 'dashboard-manager' && (
               isManagerViewAllowed ? (
@@ -323,6 +357,7 @@ export default function App() {
         isOpen={isRoleModalOpen}
         onClose={() => setIsRoleModalOpen(false)}
         currentUser={currentUser}
+        users={users}
         onSwitchUser={handleLogin}
         onUpdateUserRole={(userId, newRole) => {
           const u = users.find(x => x.id === userId);

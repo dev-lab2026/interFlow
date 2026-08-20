@@ -1,46 +1,55 @@
-version: '3.8'
-
 services:
-  # Base de données PostgreSQL
   postgres:
     image: postgres:16-alpine
-    container_name: interflow_db
-    restart: always
+    container_name: interflow-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: interflow_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ChangeMeSuperSecurePassword123!
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: interflow
+      POSTGRES_USER: interflow
+      POSTGRES_PASSWORD: ${SQL_PASSWORD:?SQL_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d interflow_db"]
+      test: ["CMD-SHELL", "pg_isready -U interflow -d interflow"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - shared_network
 
-  # Application Web (Express + React + Drizzle)
-  app:
+  interflow:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: interflow_app
-    restart: always
+    container_name: interflow
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3003:3003"
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - SQL_HOST=postgres
-      - SQL_PORT=5432
-      - SQL_DB_NAME=interflow_db
-      - SQL_USER=postgres
-      - SQL_PASSWORD=ChangeMeSuperSecurePassword123!
+      NODE_ENV: production
+      PORT: 3003
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      SQL_HOST: interflow-postgres
+      SQL_PORT: 5432
+      SQL_DB_NAME: interflow
+      SQL_USER: interflow
+      SQL_PASSWORD: ${SQL_PASSWORD:?SQL_PASSWORD is required}
+      ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:?ENTRA_TENANT_ID is required}
+      ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:?ENTRA_CLIENT_ID is required}
+      ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:?ENTRA_CLIENT_SECRET is required}
+      ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:?ENTRA_REDIRECT_URI is required}
+      ENTRA_ADMIN_EMAIL: ${ENTRA_ADMIN_EMAIL:?ENTRA_ADMIN_EMAIL is required}
+      ENTRA_POST_LOGOUT_REDIRECT_URI: ${ENTRA_POST_LOGOUT_REDIRECT_URI:-/}
+    networks:
+      - shared_network
 
 volumes:
   postgres_data:
+
+networks:
+  shared_network:
+    external: true
+    name: shared_network

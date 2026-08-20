@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: interflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SQL_DB_NAME:-interflow}
+      POSTGRES_USER: ${SQL_USER:-interflow}
+      POSTGRES_PASSWORD: ${SQL_PASSWORD:?SQL_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SQL_USER:-interflow} -d ${SQL_DB_NAME:-interflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - shared_network
+
+  db-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: interflow-db-migrate
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      SQL_HOST: postgres
+      SQL_PORT: 5432
+      SQL_DB_NAME: ${SQL_DB_NAME:-interflow}
+      SQL_USER: ${SQL_USER:-interflow}
+      SQL_PASSWORD: ${SQL_PASSWORD:?SQL_PASSWORD is required}
+    command: ["npx", "drizzle-kit", "push", "--config=drizzle.config.ts"]
+    networks:
+      - shared_network
+
+  interflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: interflow
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL is required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      SQL_HOST: postgres
+      SQL_PORT: 5432
+      SQL_DB_NAME: ${SQL_DB_NAME:-interflow}
+      SQL_USER: ${SQL_USER:-interflow}
+      SQL_PASSWORD: ${SQL_PASSWORD:?SQL_PASSWORD is required}
+    networks:
+      - shared_network
+
+volumes:
+  postgres_data:
+
+networks:
+  shared_network:
+    external: true
+    name: shared_network

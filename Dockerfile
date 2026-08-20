@@ -1,33 +1,25 @@
-# Dockerfile pour le déploiement full-stack InterFlow
-FROM node:20-alpine AS builder
-
+FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copie des fichiers de dépendances
 COPY package*.json ./
-RUN npm install
+RUN npm install --no-audit --no-fund
 
-# Copie du code source
 COPY . .
-
-# Compilation de l'application (Vite + esbuild backend -> dist/server.cjs)
 RUN npm run build
 
-# Étape de production
-FROM node:20-alpine AS runner
-
+FROM node:20-alpine AS runtime
 WORKDIR /app
-
 ENV NODE_ENV=production
-ENV PORT=3000
 
-# Copie des artifacts compilés et du package.json
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
+COPY package*.json ./
+RUN npm install --omit=dev --no-audit --no-fund \
+    && npm install --no-save drizzle-kit@0.31.10 --no-audit --no-fund \
+    && npm cache clean --force
 
-# Installation des dépendances de prod uniquement
-RUN npm install
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/src ./src
+COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 
-EXPOSE 3000
+EXPOSE 3003
 
 CMD ["node", "dist/server.cjs"]

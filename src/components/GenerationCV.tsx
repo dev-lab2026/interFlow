@@ -157,20 +157,24 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
     }
   });
 
-  const generateVersionWithAI = async (type: CVVersionType) => {
+  const generateVersion = async (type: CVVersionType) => {
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/generate-cv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ consultant, targetType: type })
-      });
-      const data = await response.json();
-      if (data && data.title) {
-        setVersionsData(prev => ({ ...prev, [type]: data }));
-      }
-    } catch (e) {
-      console.error('Error generating CV version:', e);
+      await new Promise(resolve => setTimeout(resolve, 250));
+      const current = versionsData[type];
+      const skills = consultant.competences.slice(0, 6).map(c => c.libelle);
+      const certifications = consultant.certifications.slice(0, 5).map(c => c.nom);
+      setVersionsData(prev => ({
+        ...prev,
+        [type]: {
+          ...current,
+          title: `${current.title.split(' - ')[0]} - ${consultant.prenom} ${consultant.nom}`,
+          profileSummary: `${current.profileSummary} Profil actuel : ${consultant.title}, grade ${consultant.grade}, employabilité ${consultant.employabilite}%.`,
+          highlightedSkills: skills.length ? skills : current.highlightedSkills,
+          certificationsFormatted: certifications.length ? certifications : current.certificationsFormatted,
+        }
+      }));
+      setActiveVersion(type);
     } finally {
       setIsGenerating(false);
     }
@@ -201,15 +205,15 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
             <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
               <Sparkles className="w-5 h-5" />
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-              Module 3 · Générateur Multi-Cibles IA
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+              Module 3 · Générateur Multi-Cibles
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-            Génération Automatique de CV 4-en-1
+          <h1 className="text-2xl font-black text-slate-900">
+            Génération de CV 4-en-1
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Déclinez instantanément le CV en version Client, Technique, Management et Commerciale avec export Word/PDF.
+          <p className="text-xs text-slate-500">
+            Déclinez le CV en version Client, Technique, Management et Commerciale avec export Word/PDF.
           </p>
         </div>
 
@@ -233,7 +237,7 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
       </div>
 
       {exported && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center gap-2 animate-bounce">
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 font-bold text-xs flex items-center gap-2 animate-bounce">
           <Check className="w-5 h-5" />
           <span>Fichier {currentVersionData.title} exporté au format {exported} avec succès !</span>
         </div>
@@ -343,9 +347,9 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
         isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
       }`}>
         {/* Document Header Bar */}
-        <div className="flex items-center justify-between border-b pb-4 mb-6 border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between border-b pb-4 mb-6 border-slate-200">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-blue-100 text-blue-700">
               {currentVersionData.badge}
             </span>
             <span className="text-xs text-slate-400 font-medium hidden sm:inline">
@@ -355,9 +359,9 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => generateVersionWithAI(activeVersion)}
+              onClick={() => generateVersion(activeVersion)}
               disabled={isGenerating}
-              className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1 transition-colors"
+              className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 transition-colors"
               title="Régénérer cette version par IA"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
@@ -366,7 +370,7 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
 
             <button
               onClick={handleCopy}
-              className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1 transition-colors"
+              className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copie effectuée' : 'Copier'}</span>
@@ -377,11 +381,11 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
         {/* CV Paper Content Layout */}
         <div className="space-y-6 font-sans">
           {/* Header Name & Title */}
-          <div className="border-b pb-4 border-slate-100 dark:border-slate-800/80">
-            <h2 className="text-2xl font-black tracking-tight text-blue-600 dark:text-blue-400">
+          <div className="border-b pb-4 border-slate-100/80">
+            <h2 className="text-2xl font-black tracking-tight text-blue-600">
               {consultant.prenom} {consultant.nom}
             </h2>
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+            <p className="text-sm font-bold text-slate-700">
               {currentVersionData.title}
             </p>
             <p className="text-xs text-slate-400">
@@ -391,22 +395,22 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
 
           {/* Profile Summary */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b pb-1 border-slate-200 dark:border-slate-800">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b pb-1 border-slate-200">
               Résumé Profil Strategique
             </h3>
-            <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 font-normal">
+            <p className="text-xs leading-relaxed text-slate-700 font-normal">
               {currentVersionData.profileSummary}
             </p>
           </div>
 
           {/* Key Highlighted Skills */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b pb-1 border-slate-200 dark:border-slate-800">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b pb-1 border-slate-200">
               Compétences Majeures Mises en Avant
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {currentVersionData.highlightedSkills.map((sk, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-800">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                   <span>{sk}</span>
                 </div>
@@ -416,23 +420,23 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
 
           {/* Experiences Formatted */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 border-b pb-1 border-slate-200 dark:border-slate-800">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 border-b pb-1 border-slate-200">
               Expériences Récentes Reformulées
             </h3>
 
             <div className="space-y-4">
               {currentVersionData.experienceFormat.map((exp, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
+                <div key={idx} className="p-4 rounded-2xl bg-slate-50/40 border border-slate-200/80 border-slate-800">
                   <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                      {exp.role} — <span className="text-blue-600 dark:text-blue-400">{exp.company}</span>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      {exp.role} — <span className="text-blue-600">{exp.company}</span>
                     </h4>
                     <span className="text-[10px] font-bold text-slate-400">{exp.period}</span>
                   </div>
 
                   <ul className="space-y-1.5 mt-2">
                     {exp.bulletPoints.map((bp, bidx) => (
-                      <li key={bidx} className="text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                      <li key={bidx} className="text-xs text-slate-600 flex items-start gap-2">
                         <span className="text-blue-500 mt-0.5">•</span>
                         <span>{bp}</span>
                       </li>
@@ -445,12 +449,12 @@ export const GenerationCV: React.FC<GenerationCVProps> = ({
 
           {/* Certifications Formatted */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b pb-1 border-slate-200 dark:border-slate-800">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b pb-1 border-slate-200">
               Certifications Officielles & Accréditations
             </h3>
             <div className="flex flex-wrap gap-2">
               {currentVersionData.certificationsFormatted.map((cert, cidx) => (
-                <span key={cidx} className="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 flex items-center gap-1">
+                <span key={cidx} className="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
                   <Award className="w-3.5 h-3.5 text-blue-600" />
                   {cert}
                 </span>

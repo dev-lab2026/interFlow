@@ -55,21 +55,21 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
       <div className={`w-full max-w-xl p-6 md:p-8 rounded-3xl border shadow-2xl overflow-y-auto max-h-[90vh] ${
         isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
       }`}>
-        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-500">
               <GraduationCap className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-xl font-black">Ajouter au Catalogue de Formation</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 Enrichissez le catalogue d'upskilling et de certifications MS Learn / ESN.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -77,7 +77,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+            <label className="block text-xs font-bold mb-1.5 text-slate-700">
               Nom de la Formation / Parcours MS Learn *
             </label>
             <input
@@ -94,7 +94,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Catégorie de Compétences
               </label>
               <select
@@ -116,7 +116,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Fournisseur / Plateforme
               </label>
               <select
@@ -137,7 +137,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Durée (Heures)
               </label>
               <input
@@ -152,7 +152,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Niveau de Priorité
               </label>
               <select
@@ -169,7 +169,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Impact Employabilité (%)
               </label>
               <input
@@ -186,7 +186,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Code Certif Associée (Optionnel)
               </label>
               <input
@@ -201,7 +201,7 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-bold mb-1.5 text-slate-700">
                 Lien Web / Documentation
               </label>
               <input
@@ -216,11 +216,11 @@ export const AddFormationModal: React.FC<AddFormationModalProps> = ({
             </div>
           </div>
 
-          <div className="pt-3 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="pt-3 flex justify-end gap-3 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-100"
             >
               Annuler
             </button>

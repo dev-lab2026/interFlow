@@ -9,10 +9,10 @@ declare global {
 export const createPool = () => {
   if (!global._postgresPool) {
     global._postgresPool = new Pool({
-      host: process.env.SQL_HOST || 'localhost',
-      user: process.env.SQL_USER || 'postgres',
-      password: process.env.SQL_PASSWORD || 'postgres',
-      database: process.env.SQL_DB_NAME || 'interflow_db',
+      host: process.env.SQL_HOST || 'interflow-postgres',
+      user: process.env.SQL_USER || 'interflow',
+      password: process.env.SQL_PASSWORD || '',
+      database: process.env.SQL_DB_NAME || 'interflow',
       port: process.env.SQL_PORT ? parseInt(process.env.SQL_PORT) : 5432,
       max: 10,
       connectionTimeoutMillis: 15000,

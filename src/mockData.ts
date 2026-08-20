@@ -370,7 +370,7 @@ export const USER_STORIES: UserStory[] = [
     userNeed: 'Je veux interagir avec un assistant virtuel IA pour préparer les entretiens clients, rédiger des fiches de compétences et recommander des parcours.',
     businessGoal: 'Accompagner proactivement chaque consultant pendant son intercontrat.',
     acceptanceCriteria: [
-      'Interface de chat fluide Copilot Studio / Gemini',
+      'Interface de chat fluide Copilot Studio / ',
       'Questions-réponses contextualisées sur les missions et CV',
       'Boutons de prompts rapides'
     ],
