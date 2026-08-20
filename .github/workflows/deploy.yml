@@ -39,6 +39,28 @@ jobs:
           set -e
           az account show >/dev/null || az login --service-principal -u "$AZ_CLIENT_ID" -p "$AZ_CLIENT_SECRET" --tenant "$AZ_TENANT_ID"
 
+      - name: Ensure Terraform backend storage exists
+        shell: bash
+        env:
+          AZ_LOCATION: ${{ secrets.AZURE_LOCATION }}
+        run: |
+          set -e
+          LOCATION=${AZ_LOCATION:-swedencentral}
+          RG_NAME="rg-tfsstate"
+          SA_NAME="stinterflowtfstate01"
+          CONTAINER_NAME="tfstate"
+
+          echo "Ensure resource group $RG_NAME in $LOCATION"
+          az group create -n "$RG_NAME" -l "$LOCATION" || true
+
+          echo "Ensure storage account $SA_NAME"
+          az storage account show -n "$SA_NAME" -g "$RG_NAME" >/dev/null 2>&1 || az storage account create -n "$SA_NAME" -g "$RG_NAME" --sku Standard_LRS --encryption-services blob
+
+          echo "Ensure storage container $CONTAINER_NAME"
+          # Get account key
+          KEY=$(az storage account keys list -g "$RG_NAME" -n "$SA_NAME" --query [0].value -o tsv)
+          az storage container create -n "$CONTAINER_NAME" --account-name "$SA_NAME" --account-key "$KEY" || true
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
