@@ -32,9 +32,8 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
-          ssh-keygen -lf ~/.ssh/id_rsa.pub
 
-      - name: Generate .env (for InterFlow)
+      - name: Generate .env for InterFlow
         run: |
           mkdir -p ansible
           cat <<EOF > ansible/.env
@@ -103,6 +102,15 @@ jobs:
           [defaults]
           host_key_checking = False
           EOF
+
+      - name: Fix permissions on /opt/interflow
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible -i ansible/inventory.ini all \
+            --private-key ~/.ssh/id_rsa \
+            -m ansible.builtin.shell \
+            -a "sudo mkdir -p /opt/interflow && sudo chown -R azureuser:azureuser /opt/interflow && sudo chmod -R 755 /opt/interflow"
 
       - name: Copy .env to VM
         env:
