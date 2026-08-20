@@ -13,6 +13,9 @@ permissions:
 jobs:
   deploy:
     name: Deploy InterFlow to Azure
+    concurrency:
+      group: deploy-interflow-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     env:
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -67,7 +70,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-                  terraform_version: 'latest'
+          terraform_version: 'latest'
 
       - name: Terraform init
         working-directory: terraform
@@ -86,7 +89,45 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
-          terraform apply -auto-approve -input=false
+          set -euo pipefail
+
+          # Configuration for retries and backend blob info
+          RETRIES=3
+          CONTAINER_NAME="tfstate"
+          BLOB_NAME="interflow.tfsstate"
+          SA_NAME="stinterflowtfstate01"
+
+          attempt=1
+          while [ $attempt -le $RETRIES ]; do
+            echo "Terraform apply attempt $attempt/$RETRIES"
+
+            # Use a lock timeout so Terraform will wait for a short period instead of failing immediately
+            if terraform apply -auto-approve -input=false -lock-timeout=5m; then
+              echo "Terraform apply succeeded"
+              exit 0
+            fi
+
+            echo "Terraform apply failed on attempt $attempt"
+
+            # If this was the last attempt, exit with failure
+            if [ $attempt -eq $RETRIES ]; then
+              echo "Terraform apply failed after $RETRIES attempts"
+              exit 1
+            fi
+
+            echo "Attempting to break Azure blob lease for state and retry..."
+            # ARM_ACCESS_KEY is exported to the environment in a previous step using $GITHUB_ENV
+            if [ -n "${ARM_ACCESS_KEY:-}" ]; then
+              az storage blob lease break --container-name "$CONTAINER_NAME" --name "$BLOB_NAME" --account-name "$SA_NAME" --account-key "$ARM_ACCESS_KEY" --lease-break-period 0 || true
+            else
+              echo "ARM_ACCESS_KEY not set; skipping blob lease break"
+            fi
+
+            sleep_time=$((attempt * 10))
+            echo "Sleeping ${sleep_time}s before next attempt"
+            sleep $sleep_time
+            attempt=$((attempt + 1))
+          done
 
       - name: Get public IP from Terraform output
         working-directory: terraform
