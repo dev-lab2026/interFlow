@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -16,124 +16,97 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      # =====================================================
-      # CHECKOUT
-      # =====================================================
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # =====================================================
-      # SSH
-      # =====================================================
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Configure SSH
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.6.0'
+
+      - name: Terraform init
+        working-directory: terraform
+        run: terraform init -input=false
+
+      - name: Terraform apply
+        working-directory: terraform
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          terraform apply -auto-approve -input=false
+
+      - name: Get public IP from Terraform output
+        working-directory: terraform
+        id: tfout
+        run: |
+          IP=$(terraform output -raw public_ip 2>/dev/null || terraform output public_ip)
+          echo "AZURE_VM_IP=$IP" >> $GITHUB_ENV
+
+      - name: Configure SSH (install key & known_hosts)
         shell: bash
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.AZURE_SSH_KEY }}
-          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          AZURE_VM_IP: ${{ env.AZURE_VM_IP }}
         run: |
           set -e
-
-          echo "Creating SSH directory..."
-
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
 
-          echo "Installing SSH private key..."
-
           printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_rsa"
-
           chmod 600 "$HOME/.ssh/id_rsa"
 
-          echo "Checking SSH key..."
-
+          # Ensure ssh-keygen exists
           ssh-keygen -y -f "$HOME/.ssh/id_rsa" > /dev/null
 
-          echo "Adding Azure host..."
-
-          ssh-keyscan -H "$AZURE_VM_IP" >> "$HOME/.ssh/known_hosts"
-
+          # Add host key
+          ssh-keyscan -H "$AZURE_VM_IP" >> "$HOME/.ssh/known_hosts" || true
           chmod 644 "$HOME/.ssh/known_hosts"
 
-          echo "SSH configuration OK"
-
-      # =====================================================
-      # TEST SSH
-      # =====================================================
-
-      - name: Test SSH connection
+      - name: Wait for SSH to become available
         shell: bash
         env:
-          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+          AZURE_VM_IP: ${{ env.AZURE_VM_IP }}
         run: |
           set -e
+          echo "Waiting for SSH on $AZURE_VM_IP..."
+          for i in {1..30}; do
+            ssh -i "$HOME/.ssh/id_rsa" -o StrictHostKeyChecking=no -o ConnectTimeout=5 azureuser@"$AZURE_VM_IP" 'echo ok' && exit 0 || sleep 5
+          done
+          echo "SSH not available"; exit 1
 
-          ssh \
-            -i "$HOME/.ssh/id_rsa" \
-            -o StrictHostKeyChecking=yes \
-            -o ConnectTimeout=10 \
-            azureuser@"$AZURE_VM_IP" \
-            "echo 'SSH connection successful'"
-
-      # =====================================================
-      # INSTALL ANSIBLE
-      # =====================================================
-
-      - name: Install Ansible
+      - name: Install Ansible (on runner)
         shell: bash
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install ansible
-
           ansible --version
-
-      # =====================================================
-      # INVENTORY
-      # =====================================================
 
       - name: Create Ansible inventory
         shell: bash
         env:
-          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+          AZURE_VM_IP: ${{ env.AZURE_VM_IP }}
         run: |
-          set -e
-
           mkdir -p ansible
-
           cat > ansible/inventory.ini <<EOF
           [web]
-          azure-web ansible_host=${AZURE_VM_IP} ansible_user=azureuser ansible_python_interpreter=/usr/bin/python3
+          ${AZURE_VM_IP} ansible_user=azureuser ansible_python_interpreter=/usr/bin/python3
           EOF
-
           cat ansible/inventory.ini
 
-      # =====================================================
-      # ANSIBLE PING
-      # =====================================================
-
-      - name: Test Ansible connection
+      - name: Test Ansible connection (ping)
         shell: bash
         run: |
-          set -e
+          ansible -i ansible/inventory.ini web -m ping --private-key="$HOME/.ssh/id_rsa"
 
-          ansible \
-            -i ansible/inventory.ini \
-            web \
-            -m ping \
-            --private-key="$HOME/.ssh/id_rsa"
-
-      # =====================================================
-      # DEPLOY
-      # =====================================================
-
-      - name: Deploy with Ansible
+      - name: Deploy with Ansible playbook
         shell: bash
         run: |
-          set -e
-
-          ansible-playbook \
-            -i ansible/inventory.ini \
-            ansible/playbook.yml \
-            --private-key="$HOME/.ssh/id_rsa"
+          ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --private-key="$HOME/.ssh/id_rsa"

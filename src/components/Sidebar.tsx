@@ -44,35 +44,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Dashboard Consultant',
       icon: LayoutDashboard,
       badge: 'Mon Suivi',
-      roles: ['Consultant']
+      roles: ['Consultant'],
+      highlight: false
     },
     {
       id: 'gestion-cv' as ActiveTab,
       label: 'Gestion & Analyse CV IA',
       icon: FileText,
       badge: 'ATS Score',
-      roles: ['Consultant']
+      roles: ['Consultant'],
+      highlight: false
     },
     {
       id: 'generation-cv' as ActiveTab,
       label: 'Génération CV 4-en-1',
       icon: Sparkles,
       badge: 'Templates',
-      roles: ['Consultant']
+      roles: ['Consultant'],
+      highlight: false
     },
     {
       id: 'formations' as ActiveTab,
       label: 'Recommandation Formations',
       icon: GraduationCap,
       badge: 'MS Learn',
-      roles: ['Consultant']
+      roles: ['Consultant'],
+      highlight: false
     },
     {
       id: 'matching-missions' as ActiveTab,
       label: 'Matching Missions',
       icon: Target,
       badge: 'Scoring IA',
-      roles: ['Consultant', 'Manager']
+      roles: ['Consultant', 'Manager'],
+      highlight: false
     },
   ].filter(item => item.roles.includes(currentRole));
 
@@ -82,14 +87,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Dashboard Manager',
       icon: Users,
       badge: 'Bench Intercontrat',
-      roles: ['Manager']
+      roles: ['Manager'],
+      highlight: false
     },
     {
       id: 'dashboard-rh' as ActiveTab,
       label: 'Dashboard RH',
       icon: BarChart3,
       badge: 'Analytics GPEC',
-      roles: ['RH']
+      roles: ['RH'],
+      highlight: false
     }
   ].filter(item => item.roles.includes(currentRole));
 
@@ -99,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Console Utilisateurs & Droits',
       icon: ShieldCheck,
       badge: 'Admin SI',
-      highlightAdmin: true,
+      highlight: true,
       roles: ['Admin']
     }
   ].filter(item => item.roles.includes(currentRole));
