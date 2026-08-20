@@ -61,6 +61,9 @@ jobs:
           KEY=$(az storage account keys list -g "$RG_NAME" -n "$SA_NAME" --query [0].value -o tsv)
           az storage container create -n "$CONTAINER_NAME" --account-name "$SA_NAME" --account-key "$KEY" || true
 
+          echo "Export ARM_ACCESS_KEY for Terraform backend authentication"
+          echo "ARM_ACCESS_KEY=$KEY" >> $GITHUB_ENV
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
