@@ -4,13 +4,13 @@ services:
     container_name: interflow-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: interflow
-      POSTGRES_USER: interflow
+      POSTGRES_DB: ${POSTGRES_DB:-interflow}
+      POSTGRES_USER: ${POSTGRES_USER:-interflow}
       POSTGRES_PASSWORD: ${SQL_PASSWORD:?SQL_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U interflow -d interflow"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-interflow} -d ${POSTGRES_DB:-interflow}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -32,17 +32,19 @@ services:
       NODE_ENV: production
       PORT: 3003
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL is required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
       SQL_HOST: interflow-postgres
       SQL_PORT: 5432
-      SQL_DB_NAME: interflow
-      SQL_USER: interflow
+      SQL_DB_NAME: ${POSTGRES_DB:-interflow}
+      SQL_USER: ${POSTGRES_USER:-interflow}
       SQL_PASSWORD: ${SQL_PASSWORD:?SQL_PASSWORD is required}
       ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:?ENTRA_TENANT_ID is required}
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:?ENTRA_CLIENT_ID is required}
       ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:?ENTRA_CLIENT_SECRET is required}
       ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:?ENTRA_REDIRECT_URI is required}
       ENTRA_ADMIN_EMAIL: ${ENTRA_ADMIN_EMAIL:?ENTRA_ADMIN_EMAIL is required}
-      ENTRA_POST_LOGOUT_REDIRECT_URI: ${ENTRA_POST_LOGOUT_REDIRECT_URI:-/}
+      ENTRA_POST_LOGOUT_REDIRECT_URI: ${ENTRA_POST_LOGOUT_REDIRECT_URI:-https://interflow.tfsn.duckdns.org/}
     networks:
       - shared_network
 
@@ -51,5 +53,5 @@ volumes:
 
 networks:
   shared_network:
-    external: false
+    external: true
     name: shared_network

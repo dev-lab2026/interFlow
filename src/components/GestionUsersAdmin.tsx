@@ -37,7 +37,7 @@ import { ROLE_PERMISSIONS } from '../mockData';
 interface GestionUsersAdminProps {
   users: UserSession[];
   onAddUser: (newUser: UserSession) => Promise<unknown>;
-  onUpdateUser: (updatedUser: UserSession) => Promise<unknown>;
+  onUpdateUser: (updatedUser: UserSession & { password?: string }) => Promise<unknown>;
   onDeleteUser: (userId: string) => Promise<unknown>;
   isDarkMode: boolean;
 }
@@ -56,6 +56,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
   const [editingUser, setEditingUser] = useState<UserSession | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editPassword, setEditPassword] = useState('');
 
   // PostgreSQL / Cloud SQL Database Configuration State
   const [dbConfig, setDbConfig] = useState({
@@ -76,7 +77,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
   const [dbLogs, setDbLogs] = useState<string[]>([
     '[POSTGRESQL] Pool de connexions initialisé (max_connections=10)',
     '[POSTGRESQL] Connexion établie sur 10.45.12.3:5432 / BDD: interflow_db',
-    '[DRIZZLE ORM] Schéma PostgreSQL validé (4 tables: users, consultants, missions, formations)',
+    '[POSTGRESQL] Schéma validé (4 tables: users, consultants, missions, formations)',
     '[POSTGRESQL] Status Pool: 10/10 actives, Latence: 0.8 ms'
   ]);
 
@@ -114,6 +115,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
     title: '',
     department: 'Practice Cloud & Business Apps',
     status: 'Actif' as 'Actif' | 'Inactif',
+    password: ''
   });
 
   const showNotification = (msg: string) => {
@@ -124,7 +126,11 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nom.trim() || !formData.prenom.trim() || !formData.email.trim()) {
-      showNotification('Complétez les champs obligatoires.');
+      showNotification('Complétez le nom, le prénom et l’email.');
+      return;
+    }
+    if (formData.password && formData.password.length < 12) {
+      showNotification('Le mot de passe local, s’il est renseigné, doit contenir au moins 12 caractères.');
       return;
     }
     setIsSubmitting(true);
@@ -140,10 +146,11 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
         avatar: '',
         status: formData.status,
         lastLogin: 'Jamais',
-      } as UserSession;
+        password: formData.password,
+      } as UserSession & { password: string };
       await onAddUser(newUser);
       setIsAddModalOpen(false);
-      setFormData({ nom: '', prenom: '', email: '', role: 'Consultant', title: '', department: 'Practice Cloud & Business Apps', status: 'Actif', });
+      setFormData({ nom: '', prenom: '', email: '', role: 'Consultant', title: '', department: 'Practice Cloud & Business Apps', status: 'Actif', password: '' });
       showNotification(`Utilisateur ${newUser.prenom} ${newUser.nom} créé avec succès.`);
     } catch (error) {
       showNotification(error instanceof Error ? error.message : 'Erreur lors de la création.');
@@ -159,10 +166,15 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
       showNotification('Nom, prénom et email sont obligatoires.');
       return;
     }
+    if (editPassword && editPassword.length < 12) {
+      showNotification('Le nouveau mot de passe doit contenir au moins 12 caractères.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await onUpdateUser(editingUser);
+      await onUpdateUser({ ...editingUser, password: editPassword || undefined });
       setEditingUser(null);
+      setEditPassword('');
       showNotification(`Profil de ${editingUser.prenom} ${editingUser.nom} mis à jour.`);
     } catch (error) {
       showNotification(error instanceof Error ? error.message : 'Erreur lors de la mise à jour.');
@@ -230,14 +242,14 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
         `[${timestamp}] Authentification utilisateur '${dbConfig.user}' sur '${dbConfig.dbName}' : PRÊT`,
         `[${timestamp}] Connection Pool active : 10/10 slots disponibles`
       ]);
-      showNotification("Configuration backend PostgreSQL & Drizzle enregistrée avec succès !");
+      showNotification("Configuration PostgreSQL enregistrée avec succès !");
     }
   };
 
   const handleMigrateDb = () => {
     setIsMigrating(true);
     const timestamp = new Date().toLocaleTimeString();
-    setDbLogs(prev => [...prev, `[${timestamp}] Lancement de la synchronisation du schéma Drizzle ORM...`]);
+    setDbLogs(prev => [...prev, `[${timestamp}] Lancement de la vérification du schéma PostgreSQL...`]);
 
     setTimeout(() => {
       setIsMigrating(false);
@@ -288,7 +300,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
               <span>Console Administrateur SI & Gouvernance</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Administration SI, Connexion Microsoft Entra ID & Droits d'Accès
+              Administration SI, Connexion Active Directory & Droits d'Accès
             </h1>
             <p className="text-xs md:text-sm text-slate-500 max-w-2xl">
               Configuration de l'authentification Entra ID / SSO Azure AD, attribution des droits et règles RBAC, et personnalisation de la plateforme.
@@ -687,7 +699,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
               </div>
               <div>
                 <h3 className="font-bold text-lg">Configuration Connexion PostgreSQL / Cloud SQL</h3>
-                <p className="text-xs text-slate-400">Administration du serveur de base de données relationnelle et ORM Drizzle</p>
+                <p className="text-xs text-slate-400">Administration du serveur de base de données PostgreSQL</p>
               </div>
             </div>
 
@@ -812,7 +824,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
 
             {/* Right: Overview of Schema Tables & Console Output */}
             <div className="space-y-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tables & Schéma Drizzle ORM</h4>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tables & Schéma PostgreSQL</h4>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className={`p-3 rounded-2xl border ${
@@ -850,7 +862,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
 
               {/* Console Logs Box */}
               <div>
-                <label className="block text-xs font-semibold mb-1">Journal d'Événements PostgreSQL & Drizzle</label>
+                <label className="block text-xs font-semibold mb-1">Journal d'Événements PostgreSQL</label>
                 <div className="p-3.5 rounded-2xl bg-slate-950 text-emerald-400 font-mono text-[11px] h-32 overflow-y-auto space-y-1 border border-slate-800">
                   {dbLogs.map((log, i) => (
                     <p key={i} className="leading-tight">{log}</p>
@@ -870,7 +882,7 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                 className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all flex items-center gap-2"
               >
                 <RefreshCw className={`w-4 h-4 ${isMigrating ? 'animate-spin text-purple-500' : ''}`} />
-                <span>{isMigrating ? 'Migration en cours...' : 'Synchroniser Schéma (Drizzle)'}</span>
+                <span>{isMigrating ? 'Migration en cours...' : 'Vérifier le schéma PostgreSQL'}</span>
               </button>
 
               <button
@@ -1125,6 +1137,21 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
               </div>
 
               <div>
+                <label className="block font-semibold mb-1">Mot de passe initial *</label>
+                <input
+                  type="password"
+                  required
+                  minLength={12}
+                  placeholder="Au moins 12 caractères"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className={`w-full p-2.5 rounded-xl border focus:outline-none ${
+                    isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-300'
+                  }`}
+                />
+              </div>
+
+              <div>
                 <label className="block font-semibold mb-1">Rôle & Droit d'Accès Assigné *</label>
                 <select
                   value={formData.role}
@@ -1265,6 +1292,18 @@ export const GestionUsersAdmin: React.FC<GestionUsersAdminProps> = ({
                   <option value="Actif">Actif (Accès Autorisé)</option>
                   <option value="Inactif">Inactif (Désactivé)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1">Nouveau mot de passe (optionnel)</label>
+                <input
+                  type="password"
+                  minLength={12}
+                  placeholder="Laisser vide pour conserver l'actuel"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border bg-slate-50 border-slate-300 focus:outline-none"
+                />
               </div>
 
               <div>

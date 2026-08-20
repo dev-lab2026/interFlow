@@ -23,12 +23,8 @@ Configurer dans l'environnement GitHub `production` :
 - `SSH_PRIVATE_KEY`
 - `SSH_SOURCE_CIDR` — IP/CIDR du VPN ou réseau d'administration autorisé en SSH
 - `SESSION_SECRET` — secret aléatoire d'au moins 32 caractères
-- `ENTRA_TENANT_ID`
-- `ENTRA_CLIENT_ID`
-- `ENTRA_CLIENT_SECRET`
-- `ENTRA_REDIRECT_URI`
-- `ENTRA_ADMIN_EMAIL`
-- `ENTRA_POST_LOGOUT_REDIRECT_URI`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
 - `SQL_PASSWORD`
 
 ## Déploiement
@@ -41,7 +37,7 @@ Un push sur `main` déclenche :
 4. Terraform ;
 5. installation Docker sur la VM ;
 6. déploiement Docker Compose ;
-7. migration du schéma avec Drizzle ;
+7. initialisation automatique du schéma PostgreSQL par l’application ;
 8. création de l'administrateur initial si absent.
 
 ## Sécurité
@@ -64,7 +60,7 @@ BASE_URL=http://127.0.0.1:3003 ./scripts/smoke.sh
 
 ## Première connexion
 
-Le compte indiqué par `ENTRA_ADMIN_EMAIL` est provisionné comme administrateur lors de sa première connexion Microsoft Entra ID.
+L'administrateur initial est créé depuis `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Ne jamais mettre ces valeurs dans le code ou dans `.env` versionné. Après le premier accès, utiliser un gestionnaire de secrets et faire tourner le mot de passe initial.
 
 
 ## Nginx Proxy Manager
@@ -77,3 +73,15 @@ Le Proxy Host doit cibler :
 - Forward Port : `3003`
 
 Caddy n'est plus utilisé par ce projet.
+
+## Microsoft Entra ID
+
+L'application utilise MSAL Node avec le flux Authorization Code côté serveur. Pour une inscription mono-tenant, configurez une plateforme **Web** dans Microsoft Entra et ajoutez exactement :
+
+`https://interflow.tfsn.duckdns.org/api/auth/entra/callback`
+
+Variables requises : `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`, `ENTRA_REDIRECT_URI`, `ENTRA_ADMIN_EMAIL`.
+
+`ENTRA_ADMIN_EMAIL` correspond au compte Entra qui reçoit automatiquement le rôle `Admin` lors de sa première connexion.
+
+Un accès d'urgence local reste disponible avec `ADMIN_EMAIL` / `ADMIN_PASSWORD`.

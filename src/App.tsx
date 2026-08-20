@@ -89,7 +89,9 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    window.location.href = '/api/auth/logout?entra=1';
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    setCurrentUser(null);
+    setCurrentRole('Consultant');
   };
 
   const handleAddUser = async (newUser: UserSession) => {
@@ -115,7 +117,7 @@ export default function App() {
     return data.user;
   };
 
-  const handleUpdateUser = async (updatedUser: UserSession) => {
+  const handleUpdateUser = async (updatedUser: UserSession & { password?: string }) => {
     const payload: Record<string, unknown> = {
       nom: updatedUser.nom.trim(),
       prenom: updatedUser.prenom.trim(),
@@ -125,6 +127,7 @@ export default function App() {
       department: updatedUser.department?.trim() || null,
       status: updatedUser.status || 'Actif',
     };
+    if (updatedUser.password?.trim()) payload.password = updatedUser.password;
     const response = await fetch(`/api/db/users/${updatedUser.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
