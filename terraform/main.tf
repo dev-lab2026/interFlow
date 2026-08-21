@@ -145,11 +145,3 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
 }
-
-############################################
-# Outputs
-############################################
-
-output "public_ip" {
-  value = azurerm_public_ip.publicip.ip_address
-}
