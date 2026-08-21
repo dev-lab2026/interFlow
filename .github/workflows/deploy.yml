@@ -23,6 +23,7 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
 
     steps:
       - name: Checkout repository
@@ -66,16 +67,16 @@ jobs:
         run: |
           set -euo pipefail
 
-          RETRIES=3
           SA_NAME="stinterflowtfstate2026"
           CONTAINER_NAME="tfstate"
           BLOB_NAME="interflow.tfsstate"
+          RETRIES=3
 
           attempt=1
           while [ $attempt -le $RETRIES ]; do
             echo "Terraform apply attempt $attempt/$RETRIES"
 
-            if terraform apply -auto-approve -input=false -lock-timeout=5m; then
+            if terraform apply -auto-approve -input=false -lock-timeout=5m -var "public_key=$PUBLIC_KEY"; then
               echo "Terraform apply succeeded"
               exit 0
             fi
