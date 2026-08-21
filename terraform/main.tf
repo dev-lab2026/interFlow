@@ -1,5 +1,5 @@
 ############################################
-# Resource Group (managed outside Terraform)
+# Resource Group (already exists)
 ############################################
 
 data "azurerm_resource_group" "rg" {
@@ -7,112 +7,53 @@ data "azurerm_resource_group" "rg" {
 }
 
 ############################################
-# Virtual Network
+# Virtual Network (already exists)
 ############################################
 
-resource "azurerm_virtual_network" "vnet" {
+data "azurerm_virtual_network" "vnet" {
   name                = "vnet-interflow"
-  address_space       = ["10.0.0.0/16"]
-  location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
 ############################################
-# Subnet
+# Subnet (already exists)
 ############################################
 
-resource "azurerm_subnet" "subnet" {
+data "azurerm_subnet" "subnet" {
   name                 = "subnet1"
   resource_group_name  = data.azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
 }
 
 ############################################
-# Network Security Group
+# Network Security Group (already exists)
 ############################################
 
-resource "azurerm_network_security_group" "nsg" {
+data "azurerm_network_security_group" "nsg" {
   name                = "interflow-nsg"
-  location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
-
-  security_rule {
-    name                       = "SSH"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    destination_port_range     = "22"
-    source_port_range          = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "HTTP"
-    priority                   = 110
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    destination_port_range     = "80"
-    source_port_range          = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "HTTPS"
-    priority                   = 120
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    destination_port_range     = "443"
-    source_port_range          = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
 }
 
 ############################################
-# Public IP
+# Public IP (already exists)
 ############################################
 
-resource "azurerm_public_ip" "publicip" {
+data "azurerm_public_ip" "publicip" {
   name                = "interflow-ip"
-  location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
-  allocation_method   = "Static"
 }
 
 ############################################
-# Network Interface
+# Network Interface (already exists)
 ############################################
 
-resource "azurerm_network_interface" "nic" {
+data "azurerm_network_interface" "nic" {
   name                = "interflow-nic"
-  location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.subnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.publicip.id
-  }
 }
 
 ############################################
-# NIC → NSG Association
-############################################
-
-resource "azurerm_network_interface_security_group_association" "assoc" {
-  network_interface_id      = azurerm_network_interface.nic.id
-  network_security_group_id = azurerm_network_security_group.nsg.id
-}
-
-############################################
-# Virtual Machine
+# Virtual Machine (Terraform creates this)
 ############################################
 
 resource "azurerm_linux_virtual_machine" "vm" {
@@ -130,7 +71,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   network_interface_ids = [
-    azurerm_network_interface.nic.id
+    data.azurerm_network_interface.nic.id
   ]
 
   os_disk {
